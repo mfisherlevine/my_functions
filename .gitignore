@@ -1,0 +1,10 @@
+*.pyc
+*~
+.*.swp
+*.o
+*.mod
+.deps
+*.so
+.sconsign.dblite
+*.project
+*.pydevproject
