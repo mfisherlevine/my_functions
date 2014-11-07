@@ -1,6 +1,3 @@
-from tables.hdf5Extension import os
-from __builtin__ import file
-from IPython.parallel.controller.scheduler import numpy
 def HistogramImage_NoAssembly(filename, power_threshold = -100000):
     from ROOT import TH1F
     import lsst.afw.image as afwImg
@@ -145,6 +142,7 @@ def FastHistogramImageData_Print(data, filename, histmin = -999999999, histmax =
 
 def GetADC_OffsetsAndNoisesFromBiasFiles(path):
     import lsst.afw.math as math
+    import numpy
     from image_assembly import GetImage_SingleAmp
     
     ADU_Values = numpy.ndarray(16,'f8')

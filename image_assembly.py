@@ -205,7 +205,8 @@ def MakeBiasImage_SingleAmp(path, amp_number_zero_based):
 
     bias_files = []
     for filename in listdir(path):
-        if filename.find('bias') != -1:
+#        if filename.find('bias') != -1: #CHANGEBACK
+        if filename.find('frame') != -1:
             bias_files.append(path + filename)
 
     # easiest way to make an image of the right size, don't judge me :/

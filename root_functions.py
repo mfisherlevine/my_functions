@@ -10,8 +10,13 @@ from matplotlib.pyplot import hist
 gROOT.SetBatch(1) #don't show drawing on the screen along the way
 gStyle.SetOptStat(111111)
 gStyle.SetLineScalePS(0.5) # fixes the line width in vector graphics outputs
-gROOT.LoadMacro("/mnt/hgfs/VMshared/Code/my_functions/langaus.C")
-gROOT.LoadMacro("/mnt/hgfs/VMshared/Code/my_functions/langaus_plus_gaus.C")
+#gROOT.LoadMacro("/mnt/hgfs/VMshared/Code/git/my_functions/langaus.C")
+#gROOT.LoadMacro("/mnt/hgfs/VMshared/Code/git/my_functions/langaus_plus_gaus.C")
+
+gROOT.LoadMacro("langaus_plus_gaus.C")
+gROOT.LoadMacro("langaus.C")
+
+
 
 SHOW_FIT_PARS_ON_GRAPH = True
 CREATE_IMAGES = True
@@ -574,6 +579,22 @@ def DoubleGausFit(hist, fitmin, fitmax):
     fitfunc.SetParLimits(3,hist.GetBinCenter(hist.GetMaximumBin())-50,hist.GetBinCenter(hist.GetMaximumBin())+200) # mean
     fitfunc.SetParLimits(4,1,50) # sigma
     fitfunc.SetParLimits(5,integral/100,integral*5) # height
+
+
+    # for REB readout gains
+#     fitfunc.SetParameter(0,hist.GetBinCenter(hist.GetMaximumBin())) # mean
+#     fitfunc.SetParameter(1,50) # sigma
+#     fitfunc.SetParameter(2,integral*2.) # height
+#     fitfunc.SetParameter(3,hist.GetBinCenter(hist.GetMaximumBin())+250) # mean
+#     fitfunc.SetParameter(4,50) # sigma
+#     fitfunc.SetParameter(5,integral/4) # height
+#     
+#     fitfunc.SetParLimits(0,hist.GetBinCenter(hist.GetMaximumBin())-100,hist.GetBinCenter(hist.GetMaximumBin())+100 ) # mean
+#     fitfunc.SetParLimits(1,1,100) # sigma
+#     fitfunc.SetParLimits(2,integral/100,integral*10) # height
+#     fitfunc.SetParLimits(3,hist.GetBinCenter(hist.GetMaximumBin())-400,hist.GetBinCenter(hist.GetMaximumBin())+1000) # mean
+#     fitfunc.SetParLimits(4,1,100) # sigma
+#     fitfunc.SetParLimits(5,integral/100,integral*5) # height
 
     hist.Fit(fitfunc,"ME0","")
     
