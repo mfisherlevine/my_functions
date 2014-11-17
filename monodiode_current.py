@@ -127,9 +127,9 @@ def monodiode_current(inputdat):
                 break;
         i += 1;
 
-    print "Merlin:"
-    for value in cirt_pnts:
-        print value
+#     print "Merlin:"
+#     for value in cirt_pnts:
+#         print value
 
     # If we found any critical points (max = 2)
     # report the mean within the level, if no upflag set, assume t1 hits

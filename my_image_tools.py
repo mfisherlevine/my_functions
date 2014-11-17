@@ -144,6 +144,7 @@ def GetADC_OffsetsAndNoisesFromBiasFiles(path):
     import lsst.afw.math as math
     import numpy
     from image_assembly import GetImage_SingleAmp
+    import os
     
     ADU_Values = numpy.ndarray(16,'f8')
     Noise_factors = numpy.ndarray(16,'f8')

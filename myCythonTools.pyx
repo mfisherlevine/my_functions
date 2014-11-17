@@ -15,11 +15,11 @@ def HistogramImageData(np.ndarray[DTYPE_t, ndim=2] data, int power_threshold):
     
     histmin = -100
     histmax = 150000    # approx fullwell
-    nbins = int(histmax - histmin + 1)/5      # binsize of 1
+    nbins = int(histmax - histmin + 1)/1      # binsize of 1
     
     image_hist = TH1F('', '',nbins,histmin,histmax)
 
-#    xsize, ysize = data.shape # will not cythonize :/
+#     xsize, ysize = data.shape # will not cythonize :/
 
     xsize = len(data) 
     ysize = len(data[1])

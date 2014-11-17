@@ -1185,7 +1185,7 @@ static PyObject *__pyx_n_s_x;
 static PyObject *__pyx_n_s_xsize;
 static PyObject *__pyx_n_s_y;
 static PyObject *__pyx_n_s_ysize;
-static PyObject *__pyx_int_5;
+static PyObject *__pyx_int_1;
 static PyObject *__pyx_tuple__2;
 static PyObject *__pyx_tuple__3;
 static PyObject *__pyx_tuple__4;
@@ -1371,7 +1371,7 @@ static PyObject *__pyx_pf_13myCythonTools_HistogramImageData(CYTHON_UNUSED PyObj
  * 
  *     histmin = -100             # <<<<<<<<<<<<<<
  *     histmax = 150000    # approx fullwell
- *     nbins = int(histmax - histmin + 1)/5      # binsize of 1
+ *     nbins = int(histmax - histmin + 1)/1      # binsize of 1
  */
   __pyx_v_histmin = -100;
 
@@ -1379,7 +1379,7 @@ static PyObject *__pyx_pf_13myCythonTools_HistogramImageData(CYTHON_UNUSED PyObj
  * 
  *     histmin = -100
  *     histmax = 150000    # approx fullwell             # <<<<<<<<<<<<<<
- *     nbins = int(histmax - histmin + 1)/5      # binsize of 1
+ *     nbins = int(histmax - histmin + 1)/1      # binsize of 1
  * 
  */
   __pyx_v_histmax = 150000;
@@ -1387,7 +1387,7 @@ static PyObject *__pyx_pf_13myCythonTools_HistogramImageData(CYTHON_UNUSED PyObj
   /* "myCythonTools.pyx":18
  *     histmin = -100
  *     histmax = 150000    # approx fullwell
- *     nbins = int(histmax - histmin + 1)/5      # binsize of 1             # <<<<<<<<<<<<<<
+ *     nbins = int(histmax - histmin + 1)/1      # binsize of 1             # <<<<<<<<<<<<<<
  * 
  *     image_hist = TH1F('', '',nbins,histmin,histmax)
  */
@@ -1401,7 +1401,7 @@ static PyObject *__pyx_pf_13myCythonTools_HistogramImageData(CYTHON_UNUSED PyObj
   __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)((PyObject*)(&PyInt_Type))), __pyx_t_3, NULL); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 18; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyNumber_Divide(__pyx_t_2, __pyx_int_5); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 18; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = __Pyx_PyNumber_Divide(__pyx_t_2, __pyx_int_1); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 18; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_t_3); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 18; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
@@ -1409,11 +1409,11 @@ static PyObject *__pyx_pf_13myCythonTools_HistogramImageData(CYTHON_UNUSED PyObj
   __pyx_v_nbins = __pyx_t_5;
 
   /* "myCythonTools.pyx":20
- *     nbins = int(histmax - histmin + 1)/5      # binsize of 1
+ *     nbins = int(histmax - histmin + 1)/1      # binsize of 1
  * 
  *     image_hist = TH1F('', '',nbins,histmin,histmax)             # <<<<<<<<<<<<<<
  * 
- * #    xsize, ysize = data.shape # will not cythonize :/
+ * #     xsize, ysize = data.shape # will not cythonize :/
  */
   __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_nbins); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 20; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
@@ -1462,7 +1462,7 @@ static PyObject *__pyx_pf_13myCythonTools_HistogramImageData(CYTHON_UNUSED PyObj
   __pyx_t_3 = 0;
 
   /* "myCythonTools.pyx":24
- * #    xsize, ysize = data.shape # will not cythonize :/
+ * #     xsize, ysize = data.shape # will not cythonize :/
  * 
  *     xsize = len(data)             # <<<<<<<<<<<<<<
  *     ysize = len(data[1])
@@ -3869,7 +3869,7 @@ static int __Pyx_InitCachedConstants(void) {
 
 static int __Pyx_InitGlobals(void) {
   if (__Pyx_InitStrings(__pyx_string_tab) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
-  __pyx_int_5 = PyInt_FromLong(5); if (unlikely(!__pyx_int_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_int_1 = PyInt_FromLong(1); if (unlikely(!__pyx_int_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   return 0;
   __pyx_L1_error:;
   return -1;
