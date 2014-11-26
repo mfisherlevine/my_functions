@@ -569,14 +569,14 @@ def DoubleGausFit(hist, fitmin, fitmax):
     fitfunc.SetParameter(0,hist.GetBinCenter(hist.GetMaximumBin())) # mean
     fitfunc.SetParameter(1,10) # sigma
     fitfunc.SetParameter(2,integral*2.) # height
-    fitfunc.SetParameter(3,hist.GetBinCenter(hist.GetMaximumBin())+65) # mean
+    fitfunc.SetParameter(3,hist.GetBinCenter(hist.GetMaximumBin())+40) # mean
     fitfunc.SetParameter(4,10) # sigma
     fitfunc.SetParameter(5,integral/4) # height
 
     fitfunc.SetParLimits(0,hist.GetBinCenter(hist.GetMaximumBin())-50,hist.GetBinCenter(hist.GetMaximumBin())+50 ) # mean
     fitfunc.SetParLimits(1,1,50) # sigma
     fitfunc.SetParLimits(2,integral/100,integral*5) # height
-    fitfunc.SetParLimits(3,hist.GetBinCenter(hist.GetMaximumBin())-50,hist.GetBinCenter(hist.GetMaximumBin())+200) # mean
+    fitfunc.SetParLimits(3,hist.GetBinCenter(hist.GetMaximumBin())+10,hist.GetBinCenter(hist.GetMaximumBin())+200) # mean
     fitfunc.SetParLimits(4,1,50) # sigma
     fitfunc.SetParLimits(5,integral/100,integral*5) # height
 
@@ -596,7 +596,7 @@ def DoubleGausFit(hist, fitmin, fitmax):
 #     fitfunc.SetParLimits(4,1,100) # sigma
 #     fitfunc.SetParLimits(5,integral/100,integral*5) # height
 
-    hist.Fit(fitfunc,"ME0","")
+    hist.Fit(fitfunc,"ME0","", fitmin, fitmax)
     
     chisq = fitfunc.GetChisquare()
     NDF = fitfunc.GetNDF()

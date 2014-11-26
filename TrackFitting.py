@@ -7,7 +7,7 @@ from numpy import math, float64
 from IPython.parallel.controller.scheduler import numpy
 
 midline = 2002
-edge_left = 0
+edge_left = 1
 edge_right = 4095 #what is up with this giving such low numbers but not zero?!
 edge_bottom = 1 #why does 0 here give no results, but not the same with left?
 edge_top = 4003
@@ -488,11 +488,16 @@ def GetTrackStats(footprint, parent_image, filename, save_track_data = False, tr
     stats.right = stats.BBox.getEndX()
     stats.bottom = stats.BBox.getBeginY()
     stats.top = stats.BBox.getEndY()
-    if stats.left == edge_left: stats.left_track = True
-    if stats.right == edge_right: stats.right_track = True
-    if stats.top == edge_top: stats.top_track = True
-    if stats.bottom == edge_bottom: stats.bottom_track = True
-    if stats.bottom < midline and stats.top > midline: stats.midline_track = True
+#     if stats.left == edge_left: stats.left_track = True
+#     if stats.right == edge_right: stats.right_track = True
+#     if stats.top == edge_top: stats.top_track = True
+#     if stats.bottom == edge_bottom: stats.bottom_track = True
+#     if stats.bottom < midline and stats.top > midline: stats.midline_track = True
+    if stats.left <= edge_left: stats.left_track = True
+    if stats.right >= edge_right: stats.right_track = True
+    if stats.top >= edge_top: stats.top_track = True
+    if stats.bottom <= edge_bottom: stats.bottom_track = True
+    if (stats.bottom <= midline) and (stats.top >= midline): stats.midline_track = True
 
     #flux and area
     stats.npix = footprint.getNpix()
