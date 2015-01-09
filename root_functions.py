@@ -567,10 +567,10 @@ def DoubleGausFit(hist, fitmin, fitmax):
     integral = hist.GetSum()
 
     fitfunc.SetParameter(0,hist.GetBinCenter(hist.GetMaximumBin())) # mean
-    fitfunc.SetParameter(1,10) # sigma
+    fitfunc.SetParameter(1,8) # sigma
     fitfunc.SetParameter(2,integral*2.) # height
-    fitfunc.SetParameter(3,hist.GetBinCenter(hist.GetMaximumBin())+40) # mean
-    fitfunc.SetParameter(4,10) # sigma
+    fitfunc.SetParameter(3,hist.GetBinCenter(hist.GetMaximumBin())+50) # mean
+    fitfunc.SetParameter(4,8) # sigma
     fitfunc.SetParameter(5,integral/4) # height
 
     fitfunc.SetParLimits(0,hist.GetBinCenter(hist.GetMaximumBin())-50,hist.GetBinCenter(hist.GetMaximumBin())+50 ) # mean
@@ -614,6 +614,7 @@ def DoubleGausFit(hist, fitmin, fitmax):
 
 def ListToHist(list, savefile, log_z = False, nbins = 20, histmin = None, histmax = None):
     from ROOT import TCanvas, TH1F
+    import numpy as np
     c1 = TCanvas( 'canvas', 'canvas', 500, 200, 700, 500 ) #create canvas
     if histmin == None: histmin = min(list)
     if histmax == None: histmax = max(list)
@@ -621,16 +622,21 @@ def ListToHist(list, savefile, log_z = False, nbins = 20, histmin = None, histma
     hist = TH1F('', '',nbins,histmin,histmax)
     
     for value in list:
+        if (value == np.inf) or (value == np.nan):
+            print 'excluded inf/nan value'
+            continue
         hist.Fill(value)
-    hist.Draw("")
+    hist.Draw()
 
     if log_z: c1.SetLogz()
 #        image_hist.SetStats(False)
     c1.SaveAs(savefile)
     return 
 
-def ListVsList(list_x, list_y, savefile, xmin = None, xmax = None):
+def ListVsList(list_x, list_y, savefile, xmin = None, xmax = None, xtitle = '', ytitle = '', setlogy = False):
     from ROOT import TCanvas, TGraph
+    import numpy
+    
     c1 = TCanvas( 'canvas', 'canvas', 500, 200, 700, 500 ) #create canvas
     
     if len(list_x) != len(list_y):
@@ -638,13 +644,19 @@ def ListVsList(list_x, list_y, savefile, xmin = None, xmax = None):
         print str(savefile) + " was therefore not created"
         return
     
-    c1 = TCanvas( 'canvas', 'canvas', 500, 200, 700, 500 ) #create canvas
     if xmin == None: xmin = min(list_x)
     if xmax == None: xmax = max(list_x)
         
-    graph = TGraph(len(list_x), numpy.asarray(list_x), numpy.asarray(list_y)) #populate graph with data points
+    graph = TGraph(len(list_x), numpy.asarray(list_x, dtype = 'f8'), numpy.asarray(list_y, dtype = 'f8')) #populate graph with data points
+    graph.SetTitle('')
     graph.GetXaxis().SetRangeUser(xmin,xmax)
+    graph.GetXaxis().SetTitle(xtitle)
+    graph.GetYaxis().SetTitle(ytitle)
+    graph.SetMarkerColor(2)
+    graph.SetMarkerStyle(2)
+    graph.SetMarkerSize(1.5)
     graph.Draw("AP")
+    if setlogy: c1.SetLogy()
     c1.SaveAs(savefile)
     return 
 

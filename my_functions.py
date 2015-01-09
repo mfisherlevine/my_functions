@@ -1,21 +1,60 @@
 from _ctypes import Array
 from numpy import array
-def TimepixToExposure(filename):
-    from lsst.afw.image import makeImageFromArray
+
+intrinsic_offset = 0
+
+# def TimepixToExposure(filename):
+#     from lsst.afw.image import makeImageFromArray
+#     import numpy as np
+#     
+#     data = np.loadtxt(filename)
+#     x = data[:, 0] 
+#     y = data[:, 1] 
+#     t = data[:, 2]
+# 
+#     my_array = np.zeros((256,256), dtype = np.int32)
+# 
+#     for pointnum in range(len(x)):
+#         my_array[x[pointnum],y[pointnum]] = t[pointnum]
+#     
+#     my_image = makeImageFromArray(my_array)
+#     return my_image
+
+def TimepixToExposure(filename, xmin, xmax, ymin, ymax):
     import numpy as np
-    
+    from lsst.afw.image import makeImageFromArray
+
     data = np.loadtxt(filename)
-    x = data[:, 0] 
-    y = data[:, 1] 
-    t = data[:, 2]
 
     my_array = np.zeros((256,256), dtype = np.int32)
-
-    for pointnum in range(len(x)):
-        my_array[x[pointnum],y[pointnum]] = t[pointnum]
     
-    my_image = makeImageFromArray(my_array)
+    if data.shape == (0,):
+        my_image = makeImageFromArray(my_array)
+        
+    elif data.shape == (3,):
+        x = data[0] 
+        y = data[1] 
+        t = data[2]
+        
+        if x >= xmin and x <= xmax and y >= ymin and y <= ymax:
+            my_array[y,x] = t
+      
+        my_image = makeImageFromArray(my_array)
+    
+    else:   
+        x = data[:, 0] 
+        y = data[:, 1] 
+        t = data[:, 2]
+    
+        for pointnum in range(len(x)):
+            if x[pointnum] >= xmin and x[pointnum] <= xmax and y[pointnum] >= ymin and y[pointnum] <= ymax:
+                my_array[y[pointnum],x[pointnum]] = t[pointnum]
+            
+        my_image = makeImageFromArray(my_array)
+    
     return my_image
+
+
 
 
 def XYI_array_to_exposure(xs, ys, i_s):
@@ -44,7 +83,6 @@ def GetTimecodes_SingleFile(filename, winow_xmin = 0, winow_xmax = 999, winow_ym
         y = int(y)
         timecode = int(timecode)
         if x>=winow_xmin and x<=winow_xmax and y>=winow_ymin and y<=winow_ymax:
-            intrinsic_offset = 136.6
             actual_offset_us = intrinsic_offset - offset_us
             time_s = (11810. - timecode) * 20e-9
             time_us = (time_s *1e6)- actual_offset_us
@@ -88,7 +126,6 @@ def GetTimecodes_AllFilesInDir(path, winow_xmin = 0, winow_xmax = 999, winow_ymi
             y = int(y)
             timecode = int(timecode)
             if x>=winow_xmin and x<=winow_xmax and y>=winow_ymin and y<=winow_ymax:
-                intrinsic_offset = 136.6
                 actual_offset_us = intrinsic_offset - offset_us
                 time_s = (11810. - timecode) * 20e-9
                 time_us = (time_s *1e6)- actual_offset_us
@@ -118,7 +155,6 @@ def GetXYTarray_AllFilesInDir(path, winow_xmin = 0, winow_xmax = 999, winow_ymin
             y = int(data[1])
             timecode = int(data[2])
             if x>=winow_xmin and x<=winow_xmax and y>=winow_ymin and y<=winow_ymax:
-                intrinsic_offset = 136.6
                 actual_offset_us = intrinsic_offset - offset_us
                 time_s = (11810. - timecode) * 20e-9
                 time_us = (time_s *1e6)- actual_offset_us
@@ -134,7 +170,6 @@ def GetXYTarray_AllFilesInDir(path, winow_xmin = 0, winow_xmax = 999, winow_ymin
             y = int(data[i,1])
             timecode = int(data[i,2])
             if x>=winow_xmin and x<=winow_xmax and y>=winow_ymin and y<=winow_ymax:
-                intrinsic_offset = 136.6
                 actual_offset_us = intrinsic_offset - offset_us
                 time_s = (11810. - timecode) * 20e-9
                 time_us = (time_s *1e6)- actual_offset_us
@@ -297,9 +332,6 @@ def Timepix_ToT_to_lego(datafile, center_x, center_y, boxsize_over_2, savefile =
     del c1        
         
     return image_hist
-        
-        
-        
         
         
         

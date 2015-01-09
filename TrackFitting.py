@@ -7,10 +7,12 @@ from numpy import math, float64
 from IPython.parallel.controller.scheduler import numpy
 
 midline = 2002
-edge_left = 1
-edge_right = 4095 #what is up with this giving such low numbers but not zero?!
-edge_bottom = 1 #why does 0 here give no results, but not the same with left?
-edge_top = 4003
+edge_left = 0
+edge_right = 4096 #what is up with this giving such low numbers but not zero?!
+edge_bottom = 0 #why does 0 here give no results, but not the same with left?
+edge_top = 4004
+
+edge_track_stamp_border = 0
 
 CANVAS_WIDTH = 1200
 CANVAS_HEIGHT = 1000
@@ -112,7 +114,7 @@ def IsEdgeTrack(stat):
             return True
         else: return False
         
-def FitStraightLine(data):
+def FitStraightLine(data, ncols_exclude = 0):
 ############################################# graph method
 #    xpoints, ypoints = array('d'), array('d')
 #    for x in range(data.shape[0]):
@@ -135,6 +137,9 @@ def FitStraightLine(data):
 ############################################# 2D hist method
 #    nbinsx = xmax = data.shape[0]
 #    nbinsy = ymax = data.shape[1]
+
+    data = data[ncols_exclude:,]
+
     nbinsx = xmax = max(data.shape[0], data.shape[1])
     nbinsy = ymax = max(data.shape[0], data.shape[1])
     xlow = 0
@@ -148,7 +153,7 @@ def FitStraightLine(data):
 #                image_hist.Fill(float(x),float(y),1) #for not weighting by intensity
 
 #    fit_func = TF1("line","pol1", -100, 100) # suspect this is quicker than using a custom TF1 WARNING - THIS FAILS A LOT OF THE TIME FOR SOME REASON - DO NOT USE
-    fit_func = TF1("line","[1]*x + [0]", xlow - 2, xmax + 2)# NB If you declare a TF1 parameters should be [1]*x + [0] in order to match the return pars from "pol1"
+    fit_func = TF1("line","[1]*(x+"+str(ncols_exclude)+") + [0]", xlow - 2, xmax + 2)# NB If you declare a TF1 parameters should be [1]*x + [0] in order to match the return pars from "pol1"
     fit_func.SetNpx(1000)
     image_hist.Fit(fit_func, "MEQ0", "")
     
@@ -248,30 +253,7 @@ def MeasurePSF_Whole_track(data, fitted_line):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def GetSecNum(data, xcoord, ycoord, nsecs, FitLine):
-#    from numpy import random
-#    return numpy.random.randint(nsecs)
-    
     secnum = -1
     xmin = 0.
     xmax = data.shape[0]
@@ -436,7 +418,7 @@ def CalcDeltaParameter(data, fitted_line):
     return discriminator
    
    
-def _GetPixelData(footprint, parent_image, technique = 'footprint'):
+def _GetPixelData(footprint, parent_image, technique = 'footprint',):
     if technique != 'footprint' and technique != 'bbox': technique = 'footprint'
     
     if technique == 'bbox':
