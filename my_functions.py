@@ -1,7 +1,8 @@
 from _ctypes import Array
 from numpy import array
+from __builtin__ import open
 
-intrinsic_offset = 0
+intrinsic_offset = -75
 
 # def TimepixToExposure(filename):
 #     from lsst.afw.image import makeImageFromArray
@@ -120,7 +121,14 @@ def GetTimecodes_AllFilesInDir(path, winow_xmin = 0, winow_xmax = 999, winow_ymi
 
     for filename in files:
         datafile = open(filename)
-        for line in datafile.readlines():
+        lines = datafile.readlines()
+        
+#         if len(lines) > 50 and len(lines) < 1000:
+#             OpenTimepixInDS9(filename)
+#             exit()
+        
+        if len(lines) > 1000: continue #skip bad files (glitches)
+        for line in lines:
             x,y,timecode = string.split(str(line),'\t')
             x = int(x)
             y = int(y)
@@ -165,6 +173,7 @@ def GetXYTarray_AllFilesInDir(path, winow_xmin = 0, winow_xmax = 999, winow_ymin
             continue
         
         #extract data for multiline files
+        if len(data) > 10000: continue #skip glitch files
         for i in range(len(data)):
             x = int(data[i,0])
             y = int(data[i,1])
@@ -220,7 +229,7 @@ def MakeCompositeImage_Medipix(path, winow_xmin = 0, winow_xmax = 999, winow_ymi
 
 def OpenTimepixInDS9(filename):
     import lsst.afw.display.ds9 as ds9
-    image = TimepixToExposure(filename)
+    image = TimepixToExposure(filename, 0,255,0,255)
 
     try:
         ds9.initDS9(False)
@@ -333,6 +342,60 @@ def Timepix_ToT_to_lego(datafile, center_x, center_y, boxsize_over_2, savefile =
         
     return image_hist
         
+
+def TimepixDirToPImMMSDatafile(path, outfile_name, winow_xmin = 0, winow_xmax = 999, winow_ymin = 0, winow_ymax = 999, offset_us = 0, tmin_us = -1000, tmax_us = 999999, maxfiles = None):
+    import string, os
+    import pylab as pl
+    
+    files = []
+    for filename in os.listdir(path):
+        files.append(path + filename)
+
+    output_file = open(outfile_name, 'w')
+
+    for filenum, filename in enumerate(files):
+        data = pl.loadtxt(filename, usecols = (0,1,2))
+        if (filenum % 100 == 0): print 'loaded %s files'%filenum
         
+        #handle problem with the way loadtxt reads single line data files
+        if data.shape == (3,): 
+            x = int(data[0])
+            y = int(data[1])
+            timecode = int(data[2])
+            if x>=winow_xmin and x<=winow_xmax and y>=winow_ymin and y<=winow_ymax:
+                actual_offset_us = intrinsic_offset - offset_us
+#                 time_s = (11810. - timecode) * 20e-9
+#                 time_us = (time_s *1e6)- actual_offset_us
+                reflected_timecode = 11810 - timecode
+#                 if time_us>=tmin_us and time_us<= tmax_us:
+                line = str(x) + '\t' + str(y) + '\t' + str(reflected_timecode) + '\t' + str(filenum) + '\t' + '1\n'
+                output_file.write(line)
+            continue
+        
+        #extract data for multiline files
+        if len(data) > 50: continue #skip glitch files
+        for i in range(len(data)):
+            x = int(data[i,0])
+            y = int(data[i,1])
+            timecode = int(data[i,2])
+            if x>=winow_xmin and x<=winow_xmax and y>=winow_ymin and y<=winow_ymax:
+                actual_offset_us = intrinsic_offset - offset_us
+#                 time_s = (11810. - timecode) * 20e-9
+#                 time_us = (time_s *1e6)- actual_offset_us
+                reflected_timecode = 11810 - timecode
+#                 if time_us>=tmin_us and time_us<= tmax_us:
+                line = str(x) + '\t' + str(y) + '\t' + str(reflected_timecode) + '\t' + str(filenum) + '\t' + '1\n'
+                output_file.write(line)
+#                     xs.append(x)
+#                     ys.append(y)
+#                     ts.append(time_us)
+
+        if maxfiles != None and num == maxfiles:
+            output_file.close()
+            return
+
+    output_file.close()
+    return
+      
         
 
