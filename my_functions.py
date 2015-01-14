@@ -91,8 +91,18 @@ def GetTimecodes_SingleFile(filename, winow_xmin = 0, winow_xmax = 999, winow_ym
     
     return timecodes
 
-
-
+def ReadTektronixWaveform(filename):
+    import pylab as pl
+    skiprows = 18
+#     usecols = [4,5]
+    
+    data = pl.loadtxt(filename, delimiter = ',', skiprows = skiprows)
+    pl.plot(data[:,4]*1e6 -84.3, -1.*data[:,5])
+#     pl.ylim([0,20])
+#     pl.xlim([min,max])
+    pl.title('PMT Spectrum')
+    pl.show()
+    
 def GetRawTimecodes_SingleFile(filename, winow_xmin = 0, winow_xmax = 999, winow_ymin = 0, winow_ymax = 999, offset_us = 0):
     import string
     
@@ -225,6 +235,44 @@ def MakeCompositeImage_Medipix(path, winow_xmin = 0, winow_xmax = 999, winow_ymi
     
     my_image = makeImageFromArray(my_array)
     return my_image
+
+
+def MakeCompositeImage_Timepix(path, winow_xmin = 0, winow_xmax = 999, winow_ymin = 0, winow_ymax = 999, offset_us = 0, maxfiles = None, t_min = -9999, t_max = 9999):
+    from lsst.afw.image import makeImageFromArray
+    import string, os
+    import numpy as np
+    import pylab as pl
+    
+    my_array = np.zeros((256,256), dtype = np.int32)
+
+    files = []
+    for filename in os.listdir(path):
+        files.append(path + filename)
+
+    for filenum, filename in enumerate(files):
+        print "Compiled %s files"%filenum
+        
+        xs, ys, ts = GetXYTarray_SingleFile(filename, winow_xmin, winow_xmax, winow_ymin, winow_ymax)
+        if len(xs) > 5000: continue # skip glitch files
+        
+        for i in range(len(xs)):
+            x = xs[i]
+            y = ys[i]
+            t = ts[i]
+            if x>=winow_xmin and x<=winow_xmax and y>=winow_ymin and y<=winow_ymax:
+                if t>=t_min and t<=t_max:
+                    my_array[x,y] += 1
+      
+      
+        if maxfiles != None and filenum >= maxfiles:
+            my_image = makeImageFromArray(my_array)
+            return my_image
+        
+    my_image = makeImageFromArray(my_array)
+    return my_image
+
+def TimecodeTo_us(timecode):
+    return (11810. - timecode) * 0.02 # 20e-9 * 1e6
 
 
 def OpenTimepixInDS9(filename):

@@ -164,7 +164,7 @@ def TrackToFile_ROOT_2D(data, save_path, log_z = False, plot_opt = '', force_asp
     c4.SaveAs(save_path)
     
     
-def TrackToFile_ROOT_2D_3D(data, save_path, log_z = False, plot_opt = '', force_aspect = True, legend_text = '', fitline = None):
+def TrackToFile_ROOT_2D_3D(data, save_path, log_z = False, plot_opt = '', force_aspect = True, legend_text = '', fitline = None, zmax = None):
     from ROOT import TH2F, TCanvas
     if plot_opt == '': plot_opt = 'colz0'
     if plot_opt != 'box' and plot_opt != 'colz': plot_opt = 'colz0'
@@ -190,7 +190,9 @@ def TrackToFile_ROOT_2D_3D(data, save_path, log_z = False, plot_opt = '', force_
             if value != 0:
                 image_hist.Fill(float(x),float(y),float(value))
        
-    
+    if zmax != None:
+        image_hist.GetZaxis().SetRangeUser(0,zmax)
+  
     image_hist.Draw(plot_opt)
     if fitline != None:
         from ROOT import TF1
@@ -204,6 +206,8 @@ def TrackToFile_ROOT_2D_3D(data, save_path, log_z = False, plot_opt = '', force_
         
     c4.cd(1)
     image_hist.Draw("lego20")
+    
+
 
     if legend_text != '':
         from ROOT import TPaveText
