@@ -93,15 +93,17 @@ def GetTimecodes_SingleFile(filename, winow_xmin = 0, winow_xmax = 999, winow_ym
 
 def ReadTektronixWaveform(filename):
     import pylab as pl
-    skiprows = 18
-#     usecols = [4,5]
+    data = pl.loadtxt(filename, delimiter = ',', skiprows = 18, usecols = [3,4])
+    xs = data[:,0]
+    ys = data[:,1]
+    return xs, ys
     
-    data = pl.loadtxt(filename, delimiter = ',', skiprows = skiprows)
-    pl.plot(data[:,4]*1e6 -84.3, -1.*data[:,5])
-#     pl.ylim([0,20])
-#     pl.xlim([min,max])
-    pl.title('PMT Spectrum')
-    pl.show()
+def ReadBNL_PMTWaveform(filename):
+    import pylab as pl
+    data = pl.loadtxt(filename)
+    xs = data[:,0]
+    ys = data[:,1]
+    return xs, ys
     
 def GetRawTimecodes_SingleFile(filename, winow_xmin = 0, winow_xmax = 999, winow_ymin = 0, winow_ymax = 999, offset_us = 0):
     import string
