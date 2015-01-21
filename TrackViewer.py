@@ -166,8 +166,8 @@ def TrackToFile_ROOT_2D(data, save_path, log_z = False, plot_opt = '', force_asp
     
 def TrackToFile_ROOT_2D_3D(data, save_path, log_z = False, plot_opt = '', force_aspect = True, legend_text = '', fitline = None):
     from ROOT import TH2F, TCanvas
-    if plot_opt == '': plot_opt = 'colz'
-    if plot_opt != 'box' and plot_opt != 'colz': plot_opt = 'colz'
+    if plot_opt == '': plot_opt = 'colz0'
+    if plot_opt != 'box' and plot_opt != 'colz': plot_opt = 'colz0'
     
     if force_aspect:
         nbinsx = xmax = max(data.shape[0], data.shape[1])
@@ -189,7 +189,8 @@ def TrackToFile_ROOT_2D_3D(data, save_path, log_z = False, plot_opt = '', force_
             value = data[x,y]
             if value != 0:
                 image_hist.Fill(float(x),float(y),float(value))
-        
+       
+    
     image_hist.Draw(plot_opt)
     if fitline != None:
         from ROOT import TF1
