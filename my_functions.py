@@ -149,7 +149,8 @@ def GetTimecodes_AllFilesInDir(path, winow_xmin = 0, winow_xmax = 999, winow_ymi
                 actual_offset_us = intrinsic_offset - offset_us
                 time_s = (11810. - timecode) * 20e-9
                 time_us = (time_s *1e6)- actual_offset_us
-                timecodes.append(time_us)
+                timecodes.append(timecode)
+#                 timecodes.append(time_us)
 
     return timecodes
 
@@ -447,5 +448,108 @@ def TimepixDirToPImMMSDatafile(path, outfile_name, winow_xmin = 0, winow_xmax = 
     output_file.close()
     return
       
-        
+def MakeTimeSlices(inpath, slicelist, outpath):
+    from lsst.afw.image import makeImageFromArray
+    import string, os
+    import numpy as np
+    from TrackViewer import TrackToFile_ROOT_2D_3D
+    
+    image_array = []
+    for i in slicelist:
+       image_array.append(np.zeros((256,256), dtype = np.int32)) 
+    
+    xs, ys, ts = GetXYTarray_AllFilesInDir_Raw_Timecodes(inpath)
+    
+    for slicenum,slice in enumerate(slicelist):
+        t_min = slice[0]
+        try:
+            t_max = slice[1]
+        except:
+            t_max = t_min
+            
+        try: #NB try/except blocks do need to be separate here
+            prefix = slice[2]
+        except:
+            prefix = ''
+            
 
+            
+        for i in range(len(xs)):
+            t = ts[i]
+            if t>=t_min and t<=t_max:
+                image_array[slicenum][xs[i],ys[i]] += 1
+      
+      
+        for i in range(1,4):
+            if t_min == t_max:
+                outname = outpath + str(t_min) + '_boxcar_' + str(i) + '.png'
+            else:
+                outname = outpath + prefix + 'range_' + str(t_min) + '_' + str(t_max) + '_boxcar_' + str(i) + '.png'
+        
+            avergaged_array = BoxcarAverage2DArray(image_array[slicenum], i)
+            TrackToFile_ROOT_2D_3D(avergaged_array, outname, plot_opt='surf1', zmax_supress_ratio = 0.5, log_z = False, force_aspect= True, fitline = None)
+        
+#         TrackToFile_ROOT_2D_3D(image_array[slicenum], outname, plot_opt='surf1', zmax_supress_ratio = 0.5, log_z = False, force_aspect= True, fitline = None)
+    
+        
+    return
+
+
+def BoxcarAverage2DArray(array, boxcar_size):
+    import numpy as np
+    xsize, ysize = array.shape
+    if boxcar_size == 1:
+        return array
+    if boxcar_size < 1:
+        print "Error - Boxcar size cannot be less than 1"
+        exit()
+        
+    ret = np.zeros((xsize - (boxcar_size - 1),ysize - (boxcar_size - 1)), dtype = np.float32)
+    for x in range(xsize - boxcar_size + 1):
+        for y in range(ysize - boxcar_size + 1):
+            av = np.average(array[x:x+boxcar_size,y:y+boxcar_size])
+            ret[x,y] = av  
+    return ret 
+
+def GetXYTarray_AllFilesInDir_Raw_Timecodes(path, winow_xmin = 0, winow_xmax = 999, winow_ymin = 0, winow_ymax = 999, offset_us = 0, maxfiles = None):
+    import string, os
+    import pylab as pl
+    
+    files = []
+    for filename in os.listdir(path):
+        files.append(path + filename)
+
+    xs, ys, ts = [], [], []
+
+    num = 0
+    for filename in files:
+        data = pl.loadtxt(filename, usecols = (0,1,2))
+        num +=1
+        if (num % 100 == 0): print 'loaded %s files'%num
+        
+        #handle problem with the way loadtxt reads single line data files
+        if data.shape == (3,): 
+            x = int(data[0])
+            y = int(data[1])
+            timecode = int(data[2])
+            if x>=winow_xmin and x<=winow_xmax and y>=winow_ymin and y<=winow_ymax:
+                xs.append(x)
+                ys.append(y)
+                ts.append(timecode)
+            continue
+        
+        #extract data for multiline files
+        if len(data) > 10000: continue #skip glitch files
+        for i in range(len(data)):
+            x = int(data[i,0])
+            y = int(data[i,1])
+            timecode = int(data[i,2])
+            if x>=winow_xmin and x<=winow_xmax and y>=winow_ymin and y<=winow_ymax:
+                xs.append(x)
+                ys.append(y)
+                ts.append(timecode)
+        
+        if maxfiles != None and num == maxfiles:
+            return xs, ys, ts
+
+    return xs, ys, ts  
