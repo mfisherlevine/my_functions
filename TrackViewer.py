@@ -164,7 +164,7 @@ def TrackToFile_ROOT_2D(data, save_path, log_z = False, plot_opt = '', force_asp
     c4.SaveAs(save_path)
     
     
-def TrackToFile_ROOT_2D_3D(data, save_path, log_z = False, plot_opt = '', force_aspect = True, legend_text = '', fitline = None):
+def TrackToFile_ROOT_2D_3D(data, save_path, log_z = False, plot_opt = '', force_aspect = True, legend_text = '', fitline = None, zmax = None, zmax_supress_ratio = 1.0):
     from ROOT import TH2F, TCanvas
     if plot_opt == '': plot_opt = 'colz0'
     if plot_opt != 'box' and plot_opt != 'colz': plot_opt = 'colz0'
@@ -175,6 +175,10 @@ def TrackToFile_ROOT_2D_3D(data, save_path, log_z = False, plot_opt = '', force_
     else:
         nbinsx = xmax = data.shape[0]
         nbinsy = ymax = data.shape[1]
+    
+    if zmax != None and zmax_supress_ratio != 1.0:
+        print "Warning - using both zmax absolute and zmax_supress"
+        print "zmax will be set at zmax * zmax_supress - is this what you meant to do?"
     
     xlow = 0
     ylow = 0
@@ -191,6 +195,18 @@ def TrackToFile_ROOT_2D_3D(data, save_path, log_z = False, plot_opt = '', force_
                 image_hist.Fill(float(x),float(y),float(value))
        
     
+    if zmax_supress_ratio != 1.0 or zmax != None:
+        binnum = image_hist.GetMaximumBin()
+        true_zmax = image_hist.GetBinContent(binnum)
+        
+        if zmax != None:
+            new_zmax = zmax * zmax_supress_ratio
+        else:
+            new_zmax = true_zmax * zmax_supress_ratio
+       
+        image_hist.GetZaxis().SetRangeUser(0,new_zmax)
+  
+  
     image_hist.Draw(plot_opt)
     if fitline != None:
         from ROOT import TF1
@@ -203,7 +219,10 @@ def TrackToFile_ROOT_2D_3D(data, save_path, log_z = False, plot_opt = '', force_
         
         
     c4.cd(1)
-    image_hist.Draw("lego20")
+#     image_hist.Draw("lego20")
+    image_hist.Draw("surf2")
+    
+
 
     if legend_text != '':
         from ROOT import TPaveText

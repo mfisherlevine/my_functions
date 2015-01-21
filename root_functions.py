@@ -633,8 +633,10 @@ def ListToHist(list, savefile, log_z = False, nbins = 20, histmin = None, histma
     c1.SaveAs(savefile)
     return 
 
-def ListVsList(list_x, list_y, savefile, xmin = None, xmax = None):
+def ListVsList(list_x, list_y, savefile, xmin = None, xmax = None, xtitle = '', ytitle = '', setlogy = False):
     from ROOT import TCanvas, TGraph
+    import numpy
+    
     c1 = TCanvas( 'canvas', 'canvas', 500, 200, 700, 500 ) #create canvas
     
     if len(list_x) != len(list_y):
@@ -642,13 +644,19 @@ def ListVsList(list_x, list_y, savefile, xmin = None, xmax = None):
         print str(savefile) + " was therefore not created"
         return
     
-    c1 = TCanvas( 'canvas', 'canvas', 500, 200, 700, 500 ) #create canvas
     if xmin == None: xmin = min(list_x)
     if xmax == None: xmax = max(list_x)
         
-    graph = TGraph(len(list_x), numpy.asarray(list_x), numpy.asarray(list_y)) #populate graph with data points
+    graph = TGraph(len(list_x), numpy.asarray(list_x, dtype = 'f8'), numpy.asarray(list_y, dtype = 'f8')) #populate graph with data points
+    graph.SetTitle('')
     graph.GetXaxis().SetRangeUser(xmin,xmax)
+    graph.GetXaxis().SetTitle(xtitle)
+    graph.GetYaxis().SetTitle(ytitle)
+    graph.SetMarkerColor(2)
+    graph.SetMarkerStyle(2)
+    graph.SetMarkerSize(1.5)
     graph.Draw("AP")
+    if setlogy: c1.SetLogy()
     c1.SaveAs(savefile)
     return 
 
