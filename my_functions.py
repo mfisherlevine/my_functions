@@ -203,6 +203,9 @@ def GetXYTarray_AllFilesInDir(path, winow_xmin = 0, winow_xmax = 999, winow_ymin
         if maxfiles != None and num == maxfiles:
             return xs, ys, ts
 
+#     if return_as_ndarray:
+#         return 
+
     return xs, ys, ts  
 
 
@@ -480,14 +483,14 @@ def MakeTimeSlices(inpath, slicelist, outpath):
                 image_array[slicenum][xs[i],ys[i]] += 1
       
       
-        for i in range(1,4):
+        for i in range(1,3):
             if t_min == t_max:
                 outname = outpath + str(t_min) + '_boxcar_' + str(i) + '.png'
             else:
                 outname = outpath + prefix + 'range_' + str(t_min) + '_' + str(t_max) + '_boxcar_' + str(i) + '.png'
         
             avergaged_array = BoxcarAverage2DArray(image_array[slicenum], i)
-            TrackToFile_ROOT_2D_3D(avergaged_array, outname, plot_opt='surf1', zmax_supress_ratio = 0.5, log_z = False, force_aspect= True, fitline = None)
+            TrackToFile_ROOT_2D_3D(avergaged_array, outname, plot_opt='surf1', zmax_supress_ratio = 0.6, log_z = False, force_aspect= True, fitline = None)
         
 #         TrackToFile_ROOT_2D_3D(image_array[slicenum], outname, plot_opt='surf1', zmax_supress_ratio = 0.5, log_z = False, force_aspect= True, fitline = None)
     

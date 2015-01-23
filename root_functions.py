@@ -633,7 +633,7 @@ def ListToHist(list, savefile, log_z = False, nbins = 20, histmin = None, histma
     c1.SaveAs(savefile)
     return 
 
-def ListVsList(list_x, list_y, savefile, xmin = None, xmax = None, xtitle = '', ytitle = '', setlogy = False):
+def ListVsList(list_x, list_y, savefile, xmin = None, xmax = None, xtitle = '', ytitle = '', setlogy = False, ymin = None, ymax = None, marker_color = None):
     from ROOT import TCanvas, TGraph
     import numpy
     
@@ -646,19 +646,26 @@ def ListVsList(list_x, list_y, savefile, xmin = None, xmax = None, xtitle = '', 
     
     if xmin == None: xmin = min(list_x)
     if xmax == None: xmax = max(list_x)
+
+    if ymin == None: ymin = max(list_y)
+    if ymax == None: ymax = max(list_y)
+    
+    if marker_color == None: marker_color = 2
+      
         
     graph = TGraph(len(list_x), numpy.asarray(list_x, dtype = 'f8'), numpy.asarray(list_y, dtype = 'f8')) #populate graph with data points
     graph.SetTitle('')
     graph.GetXaxis().SetRangeUser(xmin,xmax)
+    graph.GetYaxis().SetRangeUser(ymin,ymax)
     graph.GetXaxis().SetTitle(xtitle)
     graph.GetYaxis().SetTitle(ytitle)
-    graph.SetMarkerColor(2)
+    graph.SetMarkerColor(marker_color)
     graph.SetMarkerStyle(2)
-    graph.SetMarkerSize(1.5)
+    graph.SetMarkerSize(0.8)
     graph.Draw("AP")
     if setlogy: c1.SetLogy()
     c1.SaveAs(savefile)
-    return 
+    return graph
 
 
 
