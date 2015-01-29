@@ -186,7 +186,9 @@ def FitStraightLine(data, ncols_exclude = 0):
         print "inercept = ", str(b)
         print "inercept error = ", str(b_error)
         print "R^2 = %s"%R2
+        del c4
 
+    del image_hist, fit_func
     return line_of_fit
 
 def MeasurePSF_Whole_track(data, fitted_line):
@@ -243,7 +245,9 @@ def MeasurePSF_Whole_track(data, fitted_line):
             c1.SaveAs(OUTPUT_PATH + "psf_hist_" + str(DEBUG_TRACK_NUM) + FILE_TYPE)
         except:
             c1.SaveAs(OUTPUT_PATH + "psf_hist_" + FILE_TYPE)
-            
+        del c1
+     
+    del psf_hist, fit_func  
     return
 
 
@@ -340,7 +344,7 @@ def MeasurePSF_in_Sections(data, fitted_line, nsecs = 3, tgraph_filename = ''):
                 textbox.SetFillColor(0)
                 textbox.Draw("same")
             c1.SaveAs(OUTPUT_PATH + "psf_section_" + str(i) + FILE_TYPE)
-
+            del c1
 
     from ROOT import TGraphErrors
     c2 = TCanvas( 'canvas', 'canvas', CANVAS_WIDTH,CANVAS_HEIGHT)
@@ -365,11 +369,15 @@ def MeasurePSF_in_Sections(data, fitted_line, nsecs = 3, tgraph_filename = ''):
         gr.GetYaxis().SetTitle('PSF #sigma (#mum)')
         gr.GetXaxis().SetTitle('Av. Si Depth (#mum)')
         c2.SaveAs(tgraph_filename)
-    
+        
 #    if a_error >= a:
 #        print "Inconclusive muon directionality - skipped track %s"%tgraph_filename
 #        return [],[],[]
    
+    del c2, hists, gr
+    import gc
+    gc.collect()
+                   
     for j in range(nsecs):
         if sigma_errors[j] > sigmas[j]:
             print "bad fit skipped"
