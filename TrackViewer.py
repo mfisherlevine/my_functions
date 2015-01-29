@@ -219,8 +219,8 @@ def TrackToFile_ROOT_2D_3D(data, save_path, log_z = False, plot_opt = '', force_
         
         
     c4.cd(1)
-#     image_hist.Draw("lego20")
-    image_hist.Draw("surf2")
+    image_hist.Draw("lego20") # good for CR Tracks
+#     image_hist.Draw("surf2") # better for Timepix/medipix composites / heatmaps
     
 
 

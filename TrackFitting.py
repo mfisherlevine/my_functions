@@ -345,7 +345,7 @@ def MeasurePSF_in_Sections(data, fitted_line, nsecs = 3, tgraph_filename = ''):
     from ROOT import TGraphErrors
     c2 = TCanvas( 'canvas', 'canvas', CANVAS_WIDTH,CANVAS_HEIGHT)
     assert nsecs == len(sigmas) == len(sigma_errors)
-    xpoints = GenXPoints(nsecs)
+    xpoints = GenXPoints(nsecs, 100.)
     
     gr = TGraphErrors(nsecs, np.asarray(xpoints,dtype = float), np.asarray(sigmas,dtype = float), np.asarray([0 for i in range(nsecs)],dtype = float), np.asarray(sigma_errors,dtype = float)) #populate graph with data points
     gr.SetLineColor(2)
@@ -386,10 +386,14 @@ def MeasurePSF_in_Sections(data, fitted_line, nsecs = 3, tgraph_filename = ''):
 #    return xpoints, sigmas, sigma_errors
     
 
-def GenXPoints(nsecs):
-    depth_increment = 100. / (float(nsecs + 1))
-    xpoints = [(i+1)*depth_increment for i in range(nsecs)]
+# def GenXPoints(nsecs):
+#     depth_increment = 100. / (float(nsecs + 1))
+#     xpoints = [(i+1)*depth_increment for i in range(nsecs)]
+#     return xpoints
+def GenXPoints(nsecs, thickness):
+    xpoints = [thickness*(2*i + 1)/(2*float(nsecs)) for i in range(nsecs)] #not the most intuitive way of expressing that, but it works out the same as the "natural" way. Has been double checked.
     return xpoints
+
 
 def CalcDeltaParameter(data, fitted_line):
     #get new coefficients as distance to line uses straight line of form ax + by + c = 0

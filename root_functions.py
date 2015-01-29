@@ -21,7 +21,7 @@ gROOT.LoadMacro("langaus.C")
 SHOW_FIT_PARS_ON_GRAPH = True
 CREATE_IMAGES = True
 FILE_TYPE = ".png"
-OUTPUT_PATH = "/home/mmmerlin/output/PSF/"
+OUTPUT_PATH = '/mnt/hgfs/VMShared/output/DES_analysis/N10/'
 GRAPHS_BLACK_AND_WHITE = False
 PAUSE_AT_END = 120 #keep ROOT windows open for X seconds
 

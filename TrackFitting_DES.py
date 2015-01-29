@@ -6,11 +6,11 @@ from __builtin__ import str
 from numpy import math, float64
 from IPython.parallel.controller.scheduler import numpy
 
-midline = 2002
+midline = 1000
 edge_left = 0
-edge_right = 4096 #what is up with this giving such low numbers but not zero?!
+edge_right = 2000 #what is up with this giving such low numbers but not zero?!
 edge_bottom = 0 #why does 0 here give no results, but not the same with left?
-edge_top = 4004
+edge_top = 4106
 
 edge_track_stamp_border = 0
 
@@ -311,11 +311,11 @@ def MeasurePSF_in_Sections(data, fitted_line, nsecs = 3, tgraph_filename = ''):
         sigma = fit_func.GetParameter(2) 
         sigma_error = fit_func.GetParError(2)
         
-        sigmas.append(abs(10*sigma)) #10 for the 10um per pixel
-        sigma_errors.append(abs(10*sigma_error)) #10 for the 10um per pixel
+        sigmas.append(abs(15*sigma)) #15 for the 15um per pixel
+        sigma_errors.append(abs(15*sigma_error)) #15 for the 15um per pixel
         
-        mean = fit_func.GetParameter(10*1) #10 for the 10um per pixel
-        mean_error = fit_func.GetParError(10*1) #10 for the 10um per pixel
+        mean = fit_func.GetParameter(15*1) #15 for the 15um per pixel
+        mean_error = fit_func.GetParError(15*1) #10 for the 15um per pixel
         
         chisq = fit_func.GetChisquare()
         NDF = fit_func.GetNDF()
@@ -345,7 +345,7 @@ def MeasurePSF_in_Sections(data, fitted_line, nsecs = 3, tgraph_filename = ''):
     from ROOT import TGraphErrors
     c2 = TCanvas( 'canvas', 'canvas', CANVAS_WIDTH,CANVAS_HEIGHT)
     assert nsecs == len(sigmas) == len(sigma_errors)
-    xpoints = GenXPoints(nsecs)
+    xpoints = GenXPoints(nsecs, 250.)
     
     gr = TGraphErrors(nsecs, np.asarray(xpoints,dtype = float), np.asarray(sigmas,dtype = float), np.asarray([0 for i in range(nsecs)],dtype = float), np.asarray(sigma_errors,dtype = float)) #populate graph with data points
     gr.SetLineColor(2)
@@ -386,9 +386,8 @@ def MeasurePSF_in_Sections(data, fitted_line, nsecs = 3, tgraph_filename = ''):
 #    return xpoints, sigmas, sigma_errors
     
 
-def GenXPoints(nsecs):
-    depth_increment = 100. / (float(nsecs + 1))
-    xpoints = [(i+1)*depth_increment for i in range(nsecs)]
+def GenXPoints(nsecs, thickness):
+    xpoints = [thickness*(2*i + 1)/(2*float(nsecs)) for i in range(nsecs)] #not the most intuitive way of expressing that, but it works out the same as the "natural" way. Has been double checked.
     return xpoints
 
 def CalcDeltaParameter(data, fitted_line):
