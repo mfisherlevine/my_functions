@@ -513,8 +513,13 @@ def Browse(object): #opens object in a TBrowser
 #    
 ##    gROOT.SetBatch(0) #don't show drawing on the screen along the way
     
-    b = TBrowser()
-    b.Add(object)
+    
+#      TBrowser(const char* name, TObject* obj, const char* title, UInt_t width, UInt_t height, Option_t* opt = "")
+
+
+
+    b = TBrowser('new_browser', object, 'My_Browser', '')
+#     b.Add(object)
 #    
 #    subprocess.call("root " + str(filename))
     
