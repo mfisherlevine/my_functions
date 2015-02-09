@@ -272,7 +272,7 @@ def GetSecNum(data, xcoord, ycoord, nsecs, FitLine):
 
 
 
-def MeasurePSF_in_Sections(data, fitted_line, nsecs = 3, tgraph_filename = ''):
+def MeasurePSF_in_Sections(data, fitted_line, nsecs = 3, tgraph_filename = '', DEBUG = False, DEBUG_Filenum = 0):
     #get new coefficients as distance to line uses straight line of form ax + by + c = 0
     a = -1. * fitted_line.a
     b = 1
@@ -343,7 +343,7 @@ def MeasurePSF_in_Sections(data, fitted_line, nsecs = 3, tgraph_filename = ''):
                     textbox.AddText(line)
                 textbox.SetFillColor(0)
                 textbox.Draw("same")
-            c1.SaveAs(OUTPUT_PATH + "psf_section_" + str(i) + FILE_TYPE)
+            c1.SaveAs(OUTPUT_PATH + str(DEBUG_Filenum) + "psf_section_" + str(i) + FILE_TYPE)
             del c1
 
     from ROOT import TGraphErrors
@@ -358,8 +358,8 @@ def MeasurePSF_in_Sections(data, fitted_line, nsecs = 3, tgraph_filename = ''):
     
     fit_func = TF1("line","[1]*x + [0]", -1, nsecs+1)
     fit_func.SetNpx(1000)
-    gr.Fit(fit_func, "MEQ", "")
-    
+    gr.Fit(fit_func, "ME", "")
+    exit()
     a = fit_func.GetParameter(1) 
     a_error = fit_func.GetParError(1)
     

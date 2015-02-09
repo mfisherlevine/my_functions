@@ -8,7 +8,7 @@ from matplotlib.pyplot import hist
 
 
 gROOT.SetBatch(1) #don't show drawing on the screen along the way
-gStyle.SetOptStat(111111)
+gStyle.SetOptStat(11111111)
 gStyle.SetLineScalePS(0.5) # fixes the line width in vector graphics outputs
 #gROOT.LoadMacro("/mnt/hgfs/VMshared/Code/git/my_functions/langaus.C")
 #gROOT.LoadMacro("/mnt/hgfs/VMshared/Code/git/my_functions/langaus_plus_gaus.C")
@@ -21,7 +21,7 @@ gROOT.LoadMacro("langaus.C")
 SHOW_FIT_PARS_ON_GRAPH = True
 CREATE_IMAGES = True
 FILE_TYPE = ".png"
-OUTPUT_PATH = '/mnt/hgfs/VMShared/output/DES_analysis/N10/'
+OUTPUT_PATH = '/mnt/hgfs/VMShared/output/DES_analysis/temp/'
 GRAPHS_BLACK_AND_WHITE = False
 PAUSE_AT_END = 120 #keep ROOT windows open for X seconds
 
