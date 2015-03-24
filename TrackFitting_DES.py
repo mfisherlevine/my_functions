@@ -286,7 +286,6 @@ def MeasurePSF_in_Sections(data, fitted_line, nsecs = 3, tgraph_filename = '', D
     for i in range(nsecs):
        hists.append(TH1F('Track section ' + str(i), 'Track section ' + str(i), nbins, histmin, histmax))
     
-    
     for xcoord in range(data.shape[0]):
         for ycoord in range(data.shape[1]):
             x = xcoord + 0.5 #adjust for bin centers - NB This is important!
@@ -358,8 +357,7 @@ def MeasurePSF_in_Sections(data, fitted_line, nsecs = 3, tgraph_filename = '', D
     
     fit_func = TF1("line","[1]*x + [0]", -1, nsecs+1)
     fit_func.SetNpx(1000)
-    gr.Fit(fit_func, "ME", "")
-    exit()
+    gr.Fit(fit_func, "MEQ", "")
     a = fit_func.GetParameter(1) 
     a_error = fit_func.GetParError(1)
     
@@ -373,7 +371,7 @@ def MeasurePSF_in_Sections(data, fitted_line, nsecs = 3, tgraph_filename = '', D
 #    if a_error >= a:
 #        print "Inconclusive muon directionality - skipped track %s"%tgraph_filename
 #        return [],[],[]
-   
+
     del c2, hists, gr
     import gc
     gc.collect()

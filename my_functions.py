@@ -56,6 +56,41 @@ def TimepixToExposure(filename, xmin, xmax, ymin, ymax):
     return my_image
 
 
+def TimepixToExposure_binary(filename, xmin, xmax, ymin, ymax):
+    import numpy as np
+    from lsst.afw.image import makeImageFromArray
+
+    data = np.loadtxt(filename)
+
+    my_array = np.zeros((256,256), dtype = np.int32)
+    
+    if data.shape == (0,):
+        my_image = makeImageFromArray(my_array)
+        
+    elif data.shape == (3,):
+        x = data[0] 
+        y = data[1] 
+        t = data[2]
+        
+        if x >= xmin and x <= xmax and y >= ymin and y <= ymax:
+            my_array[y,x] = 1
+      
+        my_image = makeImageFromArray(my_array)
+    
+    else:   
+        x = data[:, 0] 
+        y = data[:, 1] 
+        t = data[:, 2]
+    
+        for pointnum in range(len(x)):
+            if x[pointnum] >= xmin and x[pointnum] <= xmax and y[pointnum] >= ymin and y[pointnum] <= ymax:
+                my_array[y[pointnum],x[pointnum]] = 1
+            
+        my_image = makeImageFromArray(my_array)
+    
+    return my_image
+
+
 
 
 def XYI_array_to_exposure(xs, ys, i_s):
@@ -243,7 +278,7 @@ def MakeCompositeImage_Medipix(path, winow_xmin = 0, winow_xmax = 999, winow_ymi
     return my_image
 
 
-def MakeCompositeImage_Timepix(path, winow_xmin = 0, winow_xmax = 999, winow_ymin = 0, winow_ymax = 999, offset_us = 0, maxfiles = None, t_min = -9999, t_max = 9999):
+def MakeCompositeImage_Timepix(path, winow_xmin = 0, winow_xmax = 999, winow_ymin = 0, winow_ymax = 999, offset_us = 0, maxfiles = None, t_min = -9999, t_max = 9999, return_raw_array = False):
     from lsst.afw.image import makeImageFromArray
     import string, os
     import numpy as np
@@ -256,7 +291,7 @@ def MakeCompositeImage_Timepix(path, winow_xmin = 0, winow_xmax = 999, winow_ymi
         files.append(path + filename)
 
     for filenum, filename in enumerate(files):
-        print "Compiled %s files"%filenum
+        if filenum % 500 ==0: print "Compiled %s files"%filenum
         
         xs, ys, ts = GetXYTarray_SingleFile(filename, winow_xmin, winow_xmax, winow_ymin, winow_ymax)
         if len(xs) > 5000: continue # skip glitch files
@@ -275,7 +310,9 @@ def MakeCompositeImage_Timepix(path, winow_xmin = 0, winow_xmax = 999, winow_ymi
             return my_image
         
     my_image = makeImageFromArray(my_array)
+    if return_raw_array: return my_array
     return my_image
+
 
 def TimecodeTo_us(timecode):
     return (11810. - timecode) * 0.02 # 20e-9 * 1e6

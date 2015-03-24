@@ -625,6 +625,7 @@ def ListToHist(list, savefile, log_z = False, nbins = 20, histmin = None, histma
     if histmax == None: histmax = max(list)
     
     hist = TH1F('', '',nbins,histmin,histmax)
+    print "Binsize = %.4f"%(hist.GetBinWidth(2))#xxxhere
     
     for value in list:
         if (value == np.inf) or (value == np.nan):
