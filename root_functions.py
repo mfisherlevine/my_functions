@@ -617,14 +617,14 @@ def DoubleGausFit(hist, fitmin, fitmax):
 
 
 
-def ListToHist(list, savefile, log_z = False, nbins = 20, histmin = None, histmax = None):
+def ListToHist(list, savefile, log_z = False, nbins = 20, histmin = None, histmax = None, name = ''):
     from ROOT import TCanvas, TH1F
     import numpy as np
     c1 = TCanvas( 'canvas', 'canvas', 500, 200, 700, 500 ) #create canvas
     if histmin == None: histmin = min(list)
     if histmax == None: histmax = max(list)
     
-    hist = TH1F('', '',nbins,histmin,histmax)
+    hist = TH1F(name, '',nbins,histmin,histmax)
     print "Binsize = %.4f"%(hist.GetBinWidth(2))#xxxhere
     
     for value in list:
