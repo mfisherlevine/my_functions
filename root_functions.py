@@ -637,7 +637,7 @@ def ListToHist(list, savefile, log_z = False, nbins = 20, histmin = None, histma
     if log_z: c1.SetLogz()
 #        image_hist.SetStats(False)
     c1.SaveAs(savefile)
-    return 
+    return hist
 
 def ListVsList(list_x, list_y, savefile, xmin = None, xmax = None, xtitle = '', ytitle = '', setlogy = False, ymin = None, ymax = None, marker_color = None, set_grid = False):
     from ROOT import TCanvas, TGraph

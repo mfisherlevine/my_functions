@@ -109,14 +109,9 @@ def MaskBadPixels(data_array, mask_list):
     data_array *= mask_array
     
     
-def GeneratePixelMaskListFromFileset(path, noise_threshold = 0.03):
+def GeneratePixelMaskListFromFileset(path, noise_threshold = 0.03, xmin = 0, xmax = 255, ymin = 0, ymax = 255):
     import numpy as np
-    xmin = globals()['xmin']
-    xmax = globals()['xmax']
-    ymin = globals()['ymin']
-    ymax = globals()['ymax']
-    print xmin, xmax, ymin, ymax
-    exit()
+    import os
 #     intensity_array = MakeCompositeImage_Timepix(path, 0, 255, 0, 255, 0, 9999, -99999, 99999, return_raw_array=True)
     intensity_array = MakeCompositeImage_Timepix(path, xmin, xmax, ymin, ymax, 0, 9999, -99999, 99999, return_raw_array=True)
     nfiles = len(os.listdir(path))
