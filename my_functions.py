@@ -1,6 +1,8 @@
 from _ctypes import Array
 from numpy import array
 from __builtin__ import open
+import numpy as np
+
 
 intrinsic_offset = -75
 
@@ -59,7 +61,6 @@ intrinsic_offset = -75
 
 def TimepixToExposure_binary(filename, xmin, xmax, ymin, ymax, mask_pixels=np.ones((1), dtype = np.float64)):
     from lsst.afw.image import makeImageFromArray
-    import numpy as np
     
     data = np.loadtxt(filename)
 
