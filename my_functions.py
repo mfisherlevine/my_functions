@@ -111,6 +111,12 @@ def MaskBadPixels(data_array, mask_list):
     
 def GeneratePixelMaskListFromFileset(path, noise_threshold = 0.03):
     import numpy as np
+    xmin = globals()['xmin']
+    xmax = globals()['xmax']
+    ymin = globals()['ymin']
+    ymax = globals()['ymax']
+    print xmin, xmax, ymin, ymax
+    exit()
 #     intensity_array = MakeCompositeImage_Timepix(path, 0, 255, 0, 255, 0, 9999, -99999, 99999, return_raw_array=True)
     intensity_array = MakeCompositeImage_Timepix(path, xmin, xmax, ymin, ymax, 0, 9999, -99999, 99999, return_raw_array=True)
     nfiles = len(os.listdir(path))
@@ -127,8 +133,6 @@ def ViewMaskInDs9(mask_array):
 def ViewIntensityArrayInDs9(intensity_array):
     import lsst.afw.display.ds9 as ds9
     ds9.mtv(makeImageFromArray(100*intensity_array/float(intensity_array.max())))
-
-
 
 
 
