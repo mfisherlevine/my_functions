@@ -22,9 +22,45 @@ intrinsic_offset = -75
 #     return my_image
 
 
+# def TimepixToExposure_binary(filename, xmin, xmax, ymin, ymax):
+#     import numpy as np
+#     from lsst.afw.image import makeImageFromArray
+# 
+#     data = np.loadtxt(filename)
+# 
+#     my_array = np.zeros((256,256), dtype = np.int32)
+#     
+#     if data.shape == (0,):
+#         my_image = makeImageFromArray(my_array)
+#         
+#     elif data.shape == (3,):
+#         x = data[0] 
+#         y = data[1] 
+#         t = data[2]
+#         
+#         if x >= xmin and x <= xmax and y >= ymin and y <= ymax:
+#             my_array[y,x] = 1
+#       
+#         my_image = makeImageFromArray(my_array)
+#     
+#     else:   
+#         x = data[:, 0] 
+#         y = data[:, 1] 
+#         t = data[:, 2]
+#     
+#         for pointnum in range(len(x)):
+#             if x[pointnum] >= xmin and x[pointnum] <= xmax and y[pointnum] >= ymin and y[pointnum] <= ymax:
+#                 my_array[y[pointnum],x[pointnum]] = 1
+#             
+#         my_image = makeImageFromArray(my_array)
+#     
+#     return my_image
+
 
 def TimepixToExposure_binary(filename, xmin, xmax, ymin, ymax, mask_pixels=np.ones((1), dtype = np.float64)):
     from lsst.afw.image import makeImageFromArray
+    import numpy as np
+    
     data = np.loadtxt(filename)
 
     my_array = np.zeros((256,256), dtype = np.int32)
@@ -57,6 +93,7 @@ def TimepixToExposure_binary(filename, xmin, xmax, ymin, ymax, mask_pixels=np.on
 
 
 def MakeMaskArray(mask_list):
+    import numpy as np
     mask_array = np.ones((256,256), dtype = np.int32)
     
     for i in range(len(mask_list[0])):
@@ -72,6 +109,7 @@ def MaskBadPixels(data_array, mask_list):
     
     
 def GeneratePixelMaskListFromFileset(path, noise_threshold = 0.03):
+    import numpy as np
 #     intensity_array = MakeCompositeImage_Timepix(path, 0, 255, 0, 255, 0, 9999, -99999, 99999, return_raw_array=True)
     intensity_array = MakeCompositeImage_Timepix(path, xmin, xmax, ymin, ymax, 0, 9999, -99999, 99999, return_raw_array=True)
     nfiles = len(os.listdir(path))
@@ -81,10 +119,12 @@ def GeneratePixelMaskListFromFileset(path, noise_threshold = 0.03):
     
 
 def ViewMaskInDs9(mask_array):
+    import lsst.afw.display.ds9 as ds9
     ds9.mtv(makeImageFromArray(mask_array))
     
 
 def ViewIntensityArrayInDs9(intensity_array):
+    import lsst.afw.display.ds9 as ds9
     ds9.mtv(makeImageFromArray(100*intensity_array/float(intensity_array.max())))
 
 
@@ -122,41 +162,6 @@ def TimepixToExposure(filename, xmin, xmax, ymin, ymax):
         for pointnum in range(len(x)):
             if x[pointnum] >= xmin and x[pointnum] <= xmax and y[pointnum] >= ymin and y[pointnum] <= ymax:
                 my_array[y[pointnum],x[pointnum]] = t[pointnum]
-            
-        my_image = makeImageFromArray(my_array)
-    
-    return my_image
-
-
-def TimepixToExposure_binary(filename, xmin, xmax, ymin, ymax):
-    import numpy as np
-    from lsst.afw.image import makeImageFromArray
-
-    data = np.loadtxt(filename)
-
-    my_array = np.zeros((256,256), dtype = np.int32)
-    
-    if data.shape == (0,):
-        my_image = makeImageFromArray(my_array)
-        
-    elif data.shape == (3,):
-        x = data[0] 
-        y = data[1] 
-        t = data[2]
-        
-        if x >= xmin and x <= xmax and y >= ymin and y <= ymax:
-            my_array[y,x] = 1
-      
-        my_image = makeImageFromArray(my_array)
-    
-    else:   
-        x = data[:, 0] 
-        y = data[:, 1] 
-        t = data[:, 2]
-    
-        for pointnum in range(len(x)):
-            if x[pointnum] >= xmin and x[pointnum] <= xmax and y[pointnum] >= ymin and y[pointnum] <= ymax:
-                my_array[y[pointnum],x[pointnum]] = 1
             
         my_image = makeImageFromArray(my_array)
     
