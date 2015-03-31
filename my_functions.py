@@ -21,6 +21,78 @@ intrinsic_offset = -75
 #     my_image = makeImageFromArray(my_array)
 #     return my_image
 
+
+
+def TimepixToExposure_binary(filename, xmin, xmax, ymin, ymax, mask_pixels=np.ones((1), dtype = np.float64)):
+    from lsst.afw.image import makeImageFromArray
+    data = np.loadtxt(filename)
+
+    my_array = np.zeros((256,256), dtype = np.int32)
+    
+    if data.shape == (0,):
+        my_image = makeImageFromArray(my_array)
+        
+    elif data.shape == (3,):
+        x = data[0] 
+        y = data[1] 
+        t = data[2]
+        if x >= xmin and x <= xmax and y >= ymin and y <= ymax:
+            my_array[y,x] = 1
+        my_image = makeImageFromArray(my_array*mask_pixels.transpose())
+        return_npix = (my_array*mask_pixels.transpose()).sum() #apply the mask, *then* sum!
+    
+    else:   
+        x = data[:, 0] 
+        y = data[:, 1] 
+        t = data[:, 2]
+        for pointnum in range(len(x)):
+            if x[pointnum] >= xmin and x[pointnum] <= xmax and y[pointnum] >= ymin and y[pointnum] <= ymax:
+                my_array[y[pointnum],x[pointnum]] = 1
+        
+        my_image = makeImageFromArray(my_array*mask_pixels.transpose())
+        return_npix = (my_array*mask_pixels.transpose()).sum() #apply the mask, *then* sum!
+        
+    return my_image, return_npix
+
+
+
+def MakeMaskArray(mask_list):
+    mask_array = np.ones((256,256), dtype = np.int32)
+    
+    for i in range(len(mask_list[0])):
+        y = mask_list[0][i]
+        x = mask_list[1][i]
+        mask_array[y][x] = 0
+    return mask_array
+
+
+def MaskBadPixels(data_array, mask_list):
+    mask_array = MakeMaskArray(mask_list)
+    data_array *= mask_array
+    
+    
+def GeneratePixelMaskListFromFileset(path, noise_threshold = 0.03):
+#     intensity_array = MakeCompositeImage_Timepix(path, 0, 255, 0, 255, 0, 9999, -99999, 99999, return_raw_array=True)
+    intensity_array = MakeCompositeImage_Timepix(path, xmin, xmax, ymin, ymax, 0, 9999, -99999, 99999, return_raw_array=True)
+    nfiles = len(os.listdir(path))
+    mask_pixels = np.where(intensity_array >= noise_threshold*(nfiles))
+
+    return mask_pixels
+    
+
+def ViewMaskInDs9(mask_array):
+    ds9.mtv(makeImageFromArray(mask_array))
+    
+
+def ViewIntensityArrayInDs9(intensity_array):
+    ds9.mtv(makeImageFromArray(100*intensity_array/float(intensity_array.max())))
+
+
+
+
+
+
+
 def TimepixToExposure(filename, xmin, xmax, ymin, ymax):
     import numpy as np
     from lsst.afw.image import makeImageFromArray
@@ -166,8 +238,10 @@ def GetTimecodes_AllFilesInDir(path, winow_xmin = 0, winow_xmax = 999, winow_ymi
     for filename in os.listdir(path):
         files.append(path + filename)
 
+    nfiles = 0
     for filename in files:
         datafile = open(filename)
+        nfiles += 1
         lines = datafile.readlines()
         
 #         if len(lines) > 50 and len(lines) < 1000:
@@ -186,7 +260,7 @@ def GetTimecodes_AllFilesInDir(path, winow_xmin = 0, winow_xmax = 999, winow_ymi
                 time_us = (time_s *1e6)- actual_offset_us
                 timecodes.append(timecode)
 #                 timecodes.append(time_us)
-
+    print "Loaded data from %s files"%nfiles
     return timecodes
 
 def GetXYTarray_AllFilesInDir(path, winow_xmin = 0, winow_xmax = 999, winow_ymin = 0, winow_ymax = 999, offset_us = 0, tmin_us = -1000, tmax_us = 999999, maxfiles = None):
