@@ -3,6 +3,8 @@ from numpy import array
 from __builtin__ import open
 import numpy as np
 
+from lsst.afw.image import makeImageFromArray
+
 
 intrinsic_offset = -75
 
@@ -125,9 +127,12 @@ def ViewMaskInDs9(mask_array):
     ds9.mtv(makeImageFromArray(mask_array))
     
 
-def ViewIntensityArrayInDs9(intensity_array):
+def ViewIntensityArrayInDs9(intensity_array, savefile = None):
     import lsst.afw.display.ds9 as ds9
     ds9.mtv(makeImageFromArray(100*intensity_array/float(intensity_array.max())))
+    if savefile is not None:
+        arg = 'saveimage jpeg ' + str(savefile) + ' 100'
+        ds9.ds9Cmd(arg)
 
 
 
@@ -158,6 +163,7 @@ def TimepixToExposure(filename, xmin, xmax, ymin, ymax):
         x = data[:, 0] 
         y = data[:, 1] 
         t = data[:, 2]
+        print len(t)
     
         for pointnum in range(len(x)):
             if x[pointnum] >= xmin and x[pointnum] <= xmax and y[pointnum] >= ymin and y[pointnum] <= ymax:
@@ -253,8 +259,9 @@ def GetTimecodes_AllFilesInDir(path, winow_xmin = 0, winow_xmax = 999, winow_ymi
 #             OpenTimepixInDS9(filename)
 #             exit()
         
-        if len(lines) > 1000: continue #skip bad files (glitches)
+#         if len(lines) > 1000: continue #skip bad files (glitches)
         for line in lines:
+#             x,y,timecode,dummy1, dummy2 = string.split(str(line),'\t')
             x,y,timecode = string.split(str(line),'\t')
             x = int(x)
             y = int(y)
@@ -373,7 +380,7 @@ def MakeCompositeImage_Timepix(path, winow_xmin = 0, winow_xmax = 999, winow_ymi
         if filenum % 500 ==0: print "Compiled %s files"%filenum
         
         xs, ys, ts = GetXYTarray_SingleFile(filename, winow_xmin, winow_xmax, winow_ymin, winow_ymax)
-        if len(xs) > 5000: continue # skip glitch files
+#         if len(xs) > 5000: continue # skip glitch files
         
         for i in range(len(xs)):
             x = xs[i]
