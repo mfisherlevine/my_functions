@@ -718,4 +718,19 @@ def MakeToFSpectrum(input_path, save_path, xmin=0, xmax=255, ymin=0, ymax=255, t
     pl.xlim([tmin,tmax]) #for clipping the x-axis
     fig.savefig(save_path + '_ToF_ROI.png')
     
+    
+def CentroidTimepixCluster(data):
+    
+    
+    OpenTimepixInDS9(filename)
+    x_centroid, y_centroid, t_centroid = 0.,0.,0.
+    
+    
+    
+    return x_centroid, y_centroid, t_centroid
+    
+    
+    
+    
+    
 
