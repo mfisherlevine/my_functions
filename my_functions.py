@@ -4,6 +4,7 @@ from __builtin__ import open
 import numpy as np
 
 from lsst.afw.image import makeImageFromArray
+from time import sleep
 
 
 intrinsic_offset = -75
@@ -719,10 +720,65 @@ def MakeToFSpectrum(input_path, save_path, xmin=0, xmax=255, ymin=0, ymax=255, t
     fig.savefig(save_path + '_ToF_ROI.png')
     
     
-def CentroidTimepixCluster(data):
+def CentroidTimepixCluster(data, save_path = None):
+    import numpy as np
+    from ROOT import TH2F, TCanvas, TBrowser
+    
+    nbinsx = xmax = max(data.shape[0], data.shape[1])
+    nbinsy = ymax = max(data.shape[0], data.shape[1])
+    
+    xlow = 0
+    ylow = 0
+    
+    tmin = np.amin(data[np.where(data > 1)])
+    print tmin
+    
+#     data -= tmin
+    tmax = np.amax(data)
+    print tmin
+    print tmax
+    
+    c1 = TCanvas( 'canvas', 'canvas', 1000,1000) #create canvas
+    
+    image_hist = TH2F('', '',nbinsx,xlow,xmax,nbinsy, ylow, ymax)
+    for x in range(data.shape[0]):
+        for y in range(data.shape[1]):
+            value = data[x,y]
+            if value != 0:
+                image_hist.Fill(float(x),float(y),float(value-tmin))
+       
+  
+    image_hist.Draw('lego20')
+    from ROOT import TF2
+#     fit_func = TF2("f2",'[0]*(x-[1])^2 + [2]*(y-[3])^2 + [4]',0,xmax, 0, ymax)
+    fit_func = TF2("f2","[0]*TMath::Gaus(x,[1],[2])*TMath::Gaus(y,[3],[4])",0,xmax,0,ymax)
+    
+    fit_func.SetParameters(10,3,3,3,3);
     
     
-    OpenTimepixInDS9(filename)
+    true_tmax = fit_func.GetMaximum()
+    print "true tmax = %s"%true_tmax
+    
+    image_hist.Fit(fit_func)
+    fit_func.SetNpx(1000)
+    fit_func.Draw("same")
+    
+    
+    chisq =  fit_func.GetChisquare()
+    NDF = fit_func.GetNDF()
+    print "%s, %s, %s"%(chisq, NDF, chisq/float(NDF))
+            
+    image_hist.SetStats(False)
+    if save_path!= None: c1.SaveAs(save_path)
+    
+    
+    
+#     b = TBrowser('new_browser', object, 'My_Browser', '')
+#     from time import sleep
+    sleep(100)
+    
+    exit()
+    
     x_centroid, y_centroid, t_centroid = 0.,0.,0.
     
     
