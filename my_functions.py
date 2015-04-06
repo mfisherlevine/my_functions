@@ -738,7 +738,7 @@ def CentroidTimepixCluster(data, save_path = None):
     print tmin
     print tmax
     
-    c1 = TCanvas( 'canvas', 'canvas', 1000,1000) #create canvas
+    c1 = TCanvas( 'canvas', 'canvas', 1200,1000) #create canvas
     
     image_hist = TH2F('', '',nbinsx,xlow,xmax,nbinsy, ylow, ymax)
     for x in range(data.shape[0]):
@@ -754,11 +754,6 @@ def CentroidTimepixCluster(data, save_path = None):
     fit_func = TF2("f2","[0]*TMath::Gaus(x,[1],[2])*TMath::Gaus(y,[3],[4])",0,xmax,0,ymax)
     
     fit_func.SetParameters(10,3,3,3,3);
-    
-    
-    true_tmax = fit_func.GetMaximum()
-    print "true tmax = %s"%true_tmax
-    
     image_hist.Fit(fit_func)
     fit_func.SetNpx(1000)
     fit_func.Draw("same")
@@ -767,6 +762,16 @@ def CentroidTimepixCluster(data, save_path = None):
     chisq =  fit_func.GetChisquare()
     NDF = fit_func.GetNDF()
     print "%s, %s, %s"%(chisq, NDF, chisq/float(NDF))
+    
+#     true_tmax = fit_func.GetXmax()
+    true_xmax = fit_func.GetParameter(1)
+    true_ymax = fit_func.GetParameter(3)
+    true_tmax = fit_func.Eval(true_xmax, true_ymax)
+    print "xmax, ymax %s, %s"%(true_xmax,true_ymax)
+    print "true tmax = %s"%(true_tmax)
+    
+    image_hist.GetZaxis().SetRangeUser(0,np.ceil(true_tmax))
+    
             
     image_hist.SetStats(False)
     if save_path!= None: c1.SaveAs(save_path)
