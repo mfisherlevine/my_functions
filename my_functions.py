@@ -164,7 +164,6 @@ def TimepixToExposure(filename, xmin, xmax, ymin, ymax):
         x = data[:, 0] 
         y = data[:, 1] 
         t = data[:, 2]
-        print len(t)
     
         for pointnum in range(len(x)):
             if x[pointnum] >= xmin and x[pointnum] <= xmax and y[pointnum] >= ymin and y[pointnum] <= ymax:
@@ -722,7 +721,7 @@ def MakeToFSpectrum(input_path, save_path, xmin=0, xmax=255, ymin=0, ymax=255, t
     
 def CentroidTimepixCluster(data, save_path = None):
     import numpy as np
-    from ROOT import TH2F, TCanvas, TBrowser
+    from ROOT import TH2F, TCanvas, TBrowser, TF2
     
     nbinsx = xmax = max(data.shape[0], data.shape[1])
     nbinsy = ymax = max(data.shape[0], data.shape[1])
@@ -730,13 +729,8 @@ def CentroidTimepixCluster(data, save_path = None):
     xlow = 0
     ylow = 0
     
-    tmin = np.amin(data[np.where(data > 1)])
-    print tmin
-    
-#     data -= tmin
-    tmax = np.amax(data)
-    print tmin
-    print tmax
+    tmin = np.amin(data[np.where(data >= 1)])
+#     tmax = np.amax(data)
     
     c1 = TCanvas( 'canvas', 'canvas', 1200,1000) #create canvas
     
@@ -744,53 +738,54 @@ def CentroidTimepixCluster(data, save_path = None):
     for x in range(data.shape[0]):
         for y in range(data.shape[1]):
             value = data[x,y]
+            print value
             if value != 0:
+                print 'I filled it!!'
                 image_hist.Fill(float(x),float(y),float(value-tmin))
        
   
-    image_hist.Draw('lego20')
-    from ROOT import TF2
 #     fit_func = TF2("f2",'[0]*(x-[1])^2 + [2]*(y-[3])^2 + [4]',0,xmax, 0, ymax)
+#     fit_func.SetParameters(10,3,3,3,10)
+#     fit_func.SetParLimit(0,-99999999,0)
+#     fit_func.SetParLimit(2,-99999999,0)
+#     fit_func.SetParLimit(4, 0,99999999)
+
     fit_func = TF2("f2","[0]*TMath::Gaus(x,[1],[2])*TMath::Gaus(y,[3],[4])",0,xmax,0,ymax)
+    print xmax
+    print ymax
+#     fit_func.SetParameters(10,xmax/2,3,ymax/2,3)
+    fit_func.SetParameters(10,3,3,3,3)
     
-    fit_func.SetParameters(10,3,3,3,3);
     image_hist.Fit(fit_func)
     fit_func.SetNpx(1000)
+    image_hist.Draw('lego20')
     fit_func.Draw("same")
-    
     
     chisq =  fit_func.GetChisquare()
     NDF = fit_func.GetNDF()
-    print "%s, %s, %s"%(chisq, NDF, chisq/float(NDF))
+    chisqred = chisq/NDF
+    print 'ChiSq_red = %.2f'%chisqred
     
-#     true_tmax = fit_func.GetXmax()
     true_xmax = fit_func.GetParameter(1)
     true_ymax = fit_func.GetParameter(3)
-    true_tmax = fit_func.Eval(true_xmax, true_ymax)
-    print "xmax, ymax %s, %s"%(true_xmax,true_ymax)
-    print "true tmax = %s"%(true_tmax)
+    true_tmax = fit_func.Eval(true_xmax, true_ymax) + tmin
+#     print "xmax, ymax %s, %s"%(true_xmax,true_ymax)
+#     print "true tmax = %s"%(true_tmax)
     
     image_hist.GetZaxis().SetRangeUser(0,np.ceil(true_tmax))
-    
-            
     image_hist.SetStats(False)
     if save_path!= None: c1.SaveAs(save_path)
     
     
+#     sleep(100)
     
-#     b = TBrowser('new_browser', object, 'My_Browser', '')
-#     from time import sleep
-    sleep(100)
-    
-    exit()
-    
-    x_centroid, y_centroid, t_centroid = 0.,0.,0.
+#     exit()
     
     
+    return true_xmax, true_ymax, true_tmax
     
-    return x_centroid, y_centroid, t_centroid
-    
-    
+def GetMinClusterTimecode(data):
+    return np.amin(data[np.where(data >= 1)])
     
     
     
