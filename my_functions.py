@@ -719,7 +719,7 @@ def MakeToFSpectrum(input_path, save_path, xmin=0, xmax=255, ymin=0, ymax=255, t
     fig.savefig(save_path + '_ToF_ROI.png')
     
     
-def CentroidTimepixCluster(data, save_path = None):
+def CentroidTimepixCluster(data, save_path = None, fit_function = None):
     import numpy as np
     from ROOT import TH2F, TCanvas, TBrowser, TF2
     
@@ -741,6 +741,19 @@ def CentroidTimepixCluster(data, save_path = None):
             if value != 0:
                 image_hist.Fill(float(x),float(y),float(value-tmin))
        
+       
+    if fit_function == 'gaus':
+        fit_func = TF2("f2","[0]*TMath::Gaus(x,[1],[2])*TMath::Gaus(y,[3],[4])",0,xmax,0,ymax)
+        fit_func.SetParameters(10,3,3,3,3)
+    elif fit_function == 'p2':
+        fit_func = TF2("f2",'[0]*(x-[1])^2 + [2]*(y-[3])^2 + [4]',0,xmax, 0, ymax)
+        fit_func.SetParameters(10,3,3,3,3)
+    elif fit_function == 'p4':
+        fit_func = TF2("f2",'[0]*(x-[1])^4 + [2]*(y-[3])^4 + [4]',0,xmax, 0, ymax)
+        fit_func.SetParameters(10,3,3,3,3)
+    else:
+        print 'Error - unknown fit function'
+        exit()
   
 #     fit_func = TF2("f2",'[0]*(x-[1])^2 + [2]*(y-[3])^2 + [4]',0,xmax, 0, ymax)
 #     fit_func.SetParameters(10,3,3,3,10)
@@ -748,9 +761,7 @@ def CentroidTimepixCluster(data, save_path = None):
 #     fit_func.SetParLimit(2,-99999999,0)
 #     fit_func.SetParLimit(4, 0,99999999)
 
-    fit_func = TF2("f2","[0]*TMath::Gaus(x,[1],[2])*TMath::Gaus(y,[3],[4])",0,xmax,0,ymax)
-#     fit_func.SetParameters(10,xmax/2,3,ymax/2,3)
-    fit_func.SetParameters(10,3,3,3,3)
+
     
     
     image_hist.Fit(fit_func, 'MEQ')

@@ -617,7 +617,7 @@ def DoubleGausFit(hist, fitmin, fitmax):
 
 
 
-def ListToHist(list, savefile, log_z = False, nbins = 20, histmin = None, histmax = None, name = ''):
+def ListToHist(list, savefile, log_y = False, nbins = 20, histmin = None, histmax = None, name = ''):
     from ROOT import TCanvas, TH1F
     import numpy as np
     c1 = TCanvas( 'canvas', 'canvas', 500, 200, 700, 500 ) #create canvas
@@ -634,7 +634,7 @@ def ListToHist(list, savefile, log_z = False, nbins = 20, histmin = None, histma
         hist.Fill(value)
     hist.Draw()
 
-    if log_z: c1.SetLogz()
+    if log_y: c1.SetLogy()
 #        image_hist.SetStats(False)
     c1.SaveAs(savefile)
     return hist
