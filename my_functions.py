@@ -730,17 +730,15 @@ def CentroidTimepixCluster(data, save_path = None):
     ylow = 0
     
     tmin = np.amin(data[np.where(data >= 1)])
-#     tmax = np.amax(data)
     
-    c1 = TCanvas( 'canvas', 'canvas', 1200,1000) #create canvas
+    if save_path!= None: 
+        c1 = TCanvas( 'canvas', 'canvas', 1200,1000) #create canvas
     
     image_hist = TH2F('', '',nbinsx,xlow,xmax,nbinsy, ylow, ymax)
     for x in range(data.shape[0]):
         for y in range(data.shape[1]):
             value = data[x,y]
-            print value
             if value != 0:
-                print 'I filled it!!'
                 image_hist.Fill(float(x),float(y),float(value-tmin))
        
   
@@ -751,42 +749,57 @@ def CentroidTimepixCluster(data, save_path = None):
 #     fit_func.SetParLimit(4, 0,99999999)
 
     fit_func = TF2("f2","[0]*TMath::Gaus(x,[1],[2])*TMath::Gaus(y,[3],[4])",0,xmax,0,ymax)
-    print xmax
-    print ymax
 #     fit_func.SetParameters(10,xmax/2,3,ymax/2,3)
     fit_func.SetParameters(10,3,3,3,3)
     
-    image_hist.Fit(fit_func)
-    fit_func.SetNpx(1000)
-    image_hist.Draw('lego20')
-    fit_func.Draw("same")
     
-    chisq =  fit_func.GetChisquare()
-    NDF = fit_func.GetNDF()
-    chisqred = chisq/NDF
-    print 'ChiSq_red = %.2f'%chisqred
-    
+    image_hist.Fit(fit_func, 'MEQ')
     true_xmax = fit_func.GetParameter(1)
     true_ymax = fit_func.GetParameter(3)
     true_tmax = fit_func.Eval(true_xmax, true_ymax) + tmin
 #     print "xmax, ymax %s, %s"%(true_xmax,true_ymax)
 #     print "true tmax = %s"%(true_tmax)
     
-    image_hist.GetZaxis().SetRangeUser(0,np.ceil(true_tmax))
-    image_hist.SetStats(False)
-    if save_path!= None: c1.SaveAs(save_path)
+    if save_path!= None: 
+        fit_func.SetNpx(1000)
+        image_hist.Draw('lego20')
+        fit_func.Draw("same")
+        image_hist.GetZaxis().SetRangeUser(0,np.ceil(true_tmax - tmin))
+        image_hist.SetStats(False)
+        c1.SaveAs(save_path)
+        del c1
+    
+    chisq =  fit_func.GetChisquare()
+    NDF = fit_func.GetNDF()
+    try:
+        chisqred = chisq/NDF
+    except:
+        chisqred = 9999
+        
+#     print 'ChiSq_red = %.2f'%chisqred
+    
+
+
     
     
 #     sleep(100)
-    
+     
 #     exit()
     
     
-    return true_xmax, true_ymax, true_tmax
+    return true_xmax, true_ymax, true_tmax, chisqred
     
 def GetMinClusterTimecode(data):
     return np.amin(data[np.where(data >= 1)])
     
+def GetAllTimecodesInCluster(data):
+    timecodes = []
+    for x in range(data.shape[0]):
+        for y in range(data.shape[1]):
+            value = data[x,y]
+            if value != 0:
+                timecodes.append(value)
     
+    return timecodes
     
 
