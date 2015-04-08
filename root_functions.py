@@ -106,7 +106,7 @@ def GetLeftRightBinsAtPercentOfMax(hist, percent_level):
     
     maxbin = hist.GetMaximumBin()
     maxbinval = hist.GetBinContent(maxbin)
-    print "Maxbin num = %s, at value of %s, content = %s" %(maxbin, hist.GetBinCenter(maxbin), maxbinval)
+#     print "Maxbin num = %s, at value of %s, content = %s" %(maxbin, hist.GetBinCenter(maxbin), maxbinval)
     
     thr = maxbinval * (float(percent_level)/100.)
     
@@ -617,10 +617,10 @@ def DoubleGausFit(hist, fitmin, fitmax):
 
 
 
-def ListToHist(list, savefile, log_y = False, nbins = 20, histmin = None, histmax = None, name = ''):
+def ListToHist(list, savefile, log_y = False, nbins = 20, histmin = None, histmax = None, name = '', bang_a_gaus_through_it = False, fit_to_percentage_of_peak = 5):
     from ROOT import TCanvas, TH1F
     import numpy as np
-    c1 = TCanvas( 'canvas', 'canvas', 500, 200, 700, 500 ) #create canvas
+    c1 = TCanvas( 'canvas', 'canvas', 1200,800) #create canvas
     if histmin == None: histmin = min(list)
     if histmax == None: histmax = max(list)
     
@@ -633,6 +633,23 @@ def ListToHist(list, savefile, log_y = False, nbins = 20, histmin = None, histma
             continue
         hist.Fill(value)
     hist.Draw()
+
+    if bang_a_gaus_through_it:
+        fitmin, fitmax = GetLeftRightBinsAtPercentOfMax(hist,fit_to_percentage_of_peak)
+        hist.Fit('gaus','MEQ','',fitmin,fitmax)
+        mean = hist.GetFunction('gaus').GetParameter(1)
+        mean_error = hist.GetFunction('gaus').GetParError(1)
+        sigma = hist.GetFunction('gaus').GetParameter(2)
+        chisq = hist.GetFunction('gaus').GetChisquare()
+        NDF = hist.GetFunction('gaus').GetNDF()
+        legend = TLegend(0.59,0.70,0.89,0.87) #position the legend at top left
+        legend.AddEntry(hist.GetFunction('gaus'),   "Gaus Fit from %s to %s"%(fitmin, fitmax),"l")
+        legend.AddEntry("text1",      'Mean = %.2f'%mean,'')
+        legend.AddEntry("text1",      'Mean error = %.4f'%mean_error,'')
+        legend.AddEntry("text1",      'Sigma = %.2f'%sigma,'')
+        legend.AddEntry("text1",      '#chi^{2} = %.2f with %s d.o.f --> %.2f'%(chisq,NDF,(chisq/float(NDF))),'')
+        legend.Draw('same')
+        
 
     if log_y: c1.SetLogy()
 #        image_hist.SetStats(False)

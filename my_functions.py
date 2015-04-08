@@ -789,17 +789,12 @@ def CentroidTimepixCluster(data, save_path = None, fit_function = None):
         
 #     print 'ChiSq_red = %.2f'%chisqred
     
-
-
-    
-    
-#     sleep(100)
-     
-#     exit()
-    
     
     return true_xmax, true_ymax, true_tmax, chisqred
     
+def GetMaxClusterTimecode(data):
+    return np.amax(data[np.where(data >= 1)])
+
 def GetMinClusterTimecode(data):
     return np.amin(data[np.where(data >= 1)])
     
