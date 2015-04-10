@@ -863,12 +863,11 @@ def XYT_to_image(xyt_array, display = False):
 
     my_array = np.zeros((256,256), dtype = np.int32)
      
-    x = xyt_array[:, 0] 
-    y = xyt_array[:, 1] 
-    t = xyt_array[:, 2]
- 
-    for pointnum in range(len(x)):
-        my_array[y[pointnum],x[pointnum]] = +1
+    xs = xyt_array[:, 0] 
+    ys = xyt_array[:, 1] 
+        
+    for x,y in zip(xs,ys):
+        my_array[y,x] += 1
          
     my_image = makeImageFromArray(my_array)
     if display: ds9.mtv(my_image)
