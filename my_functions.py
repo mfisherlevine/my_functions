@@ -808,4 +808,70 @@ def GetAllTimecodesInCluster(data):
     
     return timecodes
     
+def Combine_and_pickle_dir(path, output_pickle):
+    import cPickle as pickle
+    import os
+    import pylab as pl
+    
+    files = []
+    for filename in os.listdir(path):
+        files.append(path + filename)
 
+    xs, ys, ts = [], [], []
+
+    for filenum, filename in enumerate(files):
+        data = pl.loadtxt(filename, usecols = (0,1,2))
+        if (filenum % 500 == 0): print 'loaded %s of %s files'%(filenum, len(files))
+        
+        #handle problem with the way loadtxt reads single line data files
+        if data.shape == (3,): 
+            xs.append(int(data[0]))
+            ys.append(int(data[1]))
+            ts.append(int(data[2]))
+        
+        #extract data for multiline files
+        if len(data) > 10000: continue #skip glitch files
+        for i in range(len(data)):
+            xs.append(int(data[i,0]))
+            ys.append(int(data[i,1]))
+            ts.append(int(data[i,2]))
+            
+    x_array = np.asarray(xs, dtype = np.int16)
+    y_array = np.asarray(ys, dtype = np.int16)
+    t_array = np.asarray(ts, dtype = np.int16)
+
+    data_array = np.ndarray([len(x_array),3], dtype = np.int16)
+    data_array[:,0] = x_array
+    data_array[:,1] = y_array
+    data_array[:,2] = t_array
+    
+    pickle.dump(data_array, open(output_pickle,'wb'), pickle.HIGHEST_PROTOCOL)
+    
+def Load_XYT_pickle(filename):
+    import cPickle as pickle
+    return pickle.load(open(filename, 'rb'))
+    
+def XYT_to_image(xyt_array, display = False):
+    import numpy as np
+    from lsst.afw.image import makeImageFromArray
+    if display:
+        import lsst.afw.display.ds9 as ds9
+        try:
+            ds9.initDS9(False)
+        except ds9.Ds9Error:
+            print
+
+    my_array = np.zeros((256,256), dtype = np.int32)
+     
+    x = xyt_array[:, 0] 
+    y = xyt_array[:, 1] 
+    t = xyt_array[:, 2]
+ 
+    for pointnum in range(len(x)):
+        my_array[y[pointnum],x[pointnum]] = +1
+         
+    my_image = makeImageFromArray(my_array)
+    if display: ds9.mtv(my_image)
+     
+    return my_image
+    
