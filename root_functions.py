@@ -5,6 +5,7 @@ from ROOT import *
 import ROOT
 import math
 from matplotlib.pyplot import hist
+from __builtin__ import isinstance
 
 
 gROOT.SetBatch(1) #don't show drawing on the screen along the way
@@ -617,7 +618,7 @@ def DoubleGausFit(hist, fitmin, fitmax):
 
 
 
-def ListToHist(list, savefile, log_y = False, nbins = 20, histmin = None, histmax = None, name = '', bang_a_gaus_through_it = False, fit_to_percentage_of_peak = 5):
+def ListToHist(list, savefile, log_y = False, nbins = 20, histmin = None, histmax = None, name = '', fit_gaus = False, fit_to_percentage_of_peak = 5):
     from ROOT import TCanvas, TH1F
     import numpy as np
     c1 = TCanvas( 'canvas', 'canvas', 1200,800) #create canvas
@@ -634,7 +635,7 @@ def ListToHist(list, savefile, log_y = False, nbins = 20, histmin = None, histma
         hist.Fill(value)
     hist.Draw()
 
-    if bang_a_gaus_through_it:
+    if fit_gaus:
         fitmin, fitmax = GetLeftRightBinsAtPercentOfMax(hist,fit_to_percentage_of_peak)
         hist.Fit('gaus','MEQ','',fitmin,fitmax)
         mean = hist.GetFunction('gaus').GetParameter(1)
@@ -656,11 +657,14 @@ def ListToHist(list, savefile, log_y = False, nbins = 20, histmin = None, histma
     c1.SaveAs(savefile)
     return hist
 
-def ListVsList(list_x, list_y, savefile, xmin = None, xmax = None, xtitle = '', ytitle = '', setlogy = False, ymin = None, ymax = None, marker_color = None, set_grid = False):
+def ListVsList(list_x, list_y, savefile, xmin = None, xmax = None, xtitle = '', ytitle = '', setlogy = False, ymin = None, ymax = None, marker_color = None, set_grid = False, marker_style= None, marker_size=None, plot_opt = None):
     from ROOT import TCanvas, TGraph
     import numpy
     
-    c1 = TCanvas( 'canvas', 'canvas', 500, 200, 700, 500 ) #create canvas
+    list_x = numpy.array(list_x, copy=False, dtype = 'f8', order ='C')
+    list_y = numpy.array(list_y, copy=False, dtype = 'f8', order ='C')
+    
+    c1 = TCanvas( 'canvas', 'canvas', 1200, 800)
     
     if len(list_x) != len(list_y):
         print "ERROR - x and y sets are different sizes"
@@ -674,18 +678,21 @@ def ListVsList(list_x, list_y, savefile, xmin = None, xmax = None, xtitle = '', 
     if ymax == None: ymax = max(list_y)
     
     if marker_color == None: marker_color = 2
+    if marker_style == None: marker_style = 2
+    if marker_size == None: marker_size = 0.8
+    if plot_opt == None: plot_opt = 'AP'
         
-    graph = TGraph(len(list_x), numpy.asarray(list_x, dtype = 'f8'), numpy.asarray(list_y, dtype = 'f8')) #populate graph with data points
+    graph = TGraph(len(list_x), list_x, list_y) #populate graph with data points
     graph.SetTitle('')
     graph.GetXaxis().SetRangeUser(xmin,xmax)
     graph.GetYaxis().SetRangeUser(ymin,ymax)
     graph.GetXaxis().SetTitle(xtitle)
     graph.GetYaxis().SetTitle(ytitle)
     graph.SetMarkerColor(marker_color)
-    graph.SetMarkerStyle(2)
-    graph.SetMarkerSize(0.8)
+    graph.SetMarkerStyle(marker_style)
+    graph.SetMarkerSize(marker_size)
     if set_grid: c1.SetGrid()
-    graph.Draw("AP")
+    graph.Draw(plot_opt)
     if setlogy: c1.SetLogy()
     c1.SaveAs(savefile)
     return graph

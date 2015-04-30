@@ -112,11 +112,11 @@ def MaskBadPixels(data_array, mask_list):
     data_array *= mask_array
     
     
-def GeneratePixelMaskListFromFileset(path, noise_threshold = 0.03, xmin = 0, xmax = 255, ymin = 0, ymax = 255):
+def GeneratePixelMaskListFromFileset(path, noise_threshold = 0.03, xmin = 0, xmax = 255, ymin = 0, ymax = 255, file_limit = 1e6):
     import numpy as np
     import os
 #     intensity_array = MakeCompositeImage_Timepix(path, 0, 255, 0, 255, 0, 9999, -99999, 99999, return_raw_array=True)
-    intensity_array = MakeCompositeImage_Timepix(path, xmin, xmax, ymin, ymax, 0, 9999, -99999, 99999, return_raw_array=True)
+    intensity_array = MakeCompositeImage_Timepix(path, xmin, xmax, ymin, ymax, 0, file_limit, -99999, 99999, return_raw_array=True)
     nfiles = len(os.listdir(path))
     mask_pixels = np.where(intensity_array >= noise_threshold*(nfiles))
 
@@ -218,7 +218,8 @@ def ReadTektronixWaveform(filename):
     
 def ReadBNL_PMTWaveform(filename):
     import pylab as pl
-    data = pl.loadtxt(filename)
+    data = pl.loadtxt(filename, skiprows = 7)
+#     pl.loadtxt(fname, dtype, comments, delimiter, converters, skiprows, usecols, unpack, ndmin)
     xs = data[:,0]
     ys = data[:,1]
     return xs, ys
@@ -395,6 +396,7 @@ def MakeCompositeImage_Timepix(path, winow_xmin = 0, winow_xmax = 999, winow_ymi
       
       
         if maxfiles != None and filenum >= maxfiles:
+            if return_raw_array: return my_array
             my_image = makeImageFromArray(my_array)
             return my_image
         
@@ -750,7 +752,7 @@ def CentroidTimepixCluster(data, save_path = None, fit_function = None):
         fit_func.SetParameters(10,3,3,3,3)
     elif fit_function == 'p4':
         fit_func = TF2("f2",'[0]*(x-[1])^4 + [2]*(y-[3])^4 + [4]',0,xmax, 0, ymax)
-        fit_func.SetParameters(10,3,3,3,3)
+        fit_func.SetParameters(-0.002,10,-0.002,8,15)
     else:
         print 'Error - unknown fit function'
         exit()
@@ -795,8 +797,8 @@ def CentroidTimepixCluster(data, save_path = None, fit_function = None):
 def GetMaxClusterTimecode(data):
     return np.amax(data[np.where(data >= 1)])
 
-def GetMinClusterTimecode(data):
-    return np.amin(data[np.where(data >= 1)])
+# def GetMinClusterTimecode(data):
+#     return np.amin(data[np.where(data >= 1)])
     
 def GetAllTimecodesInCluster(data):
     timecodes = []
@@ -866,7 +868,13 @@ def XYT_to_image(xyt_array, display = False):
     xs = xyt_array[:, 0] 
     ys = xyt_array[:, 1] 
         
+#     for x,y in zip(xs,ys):
+#         my_array[y,x] += 1
+         
+    n_counts = 0
     for x,y in zip(xs,ys):
+        if n_counts >= 10000: break
+        n_counts += 1
         my_array[y,x] += 1
          
     my_image = makeImageFromArray(my_array)
