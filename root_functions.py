@@ -618,7 +618,7 @@ def DoubleGausFit(hist, fitmin, fitmax):
 
 
 
-def ListToHist(list, savefile, log_y = False, nbins = 20, histmin = None, histmax = None, name = '', fit_gaus = False, fit_to_percentage_of_peak = 5):
+def ListToHist(list, savefile, log_y = False, nbins = 20, histmin = None, histmax = None, name = '', fit_gaus = False, fit_to_percentage_of_peak = 5, draw_fit_stats = True):
     from ROOT import TCanvas, TH1F
     import numpy as np
     c1 = TCanvas( 'canvas', 'canvas', 1200,800) #create canvas
@@ -643,13 +643,17 @@ def ListToHist(list, savefile, log_y = False, nbins = 20, histmin = None, histma
         sigma = hist.GetFunction('gaus').GetParameter(2)
         chisq = hist.GetFunction('gaus').GetChisquare()
         NDF = hist.GetFunction('gaus').GetNDF()
-        legend = TLegend(0.59,0.70,0.89,0.87) #position the legend at top left
-        legend.AddEntry(hist.GetFunction('gaus'),   "Gaus Fit from %s to %s"%(fitmin, fitmax),"l")
-        legend.AddEntry("text1",      'Mean = %.2f'%mean,'')
-        legend.AddEntry("text1",      'Mean error = %.4f'%mean_error,'')
-        legend.AddEntry("text1",      'Sigma = %.2f'%sigma,'')
-        legend.AddEntry("text1",      '#chi^{2} = %.2f with %s d.o.f --> %.2f'%(chisq,NDF,(chisq/float(NDF))),'')
-        legend.Draw('same')
+        if draw_fit_stats:        
+            legend = TLegend(0.59,0.70,0.89,0.87) #position the legend at top left
+            legend.AddEntry(hist.GetFunction('gaus'),   "Gaus Fit from %s to %s"%(fitmin, fitmax),"l")
+            legend.AddEntry("text1",      'Mean = %.2f'%mean,'')
+            legend.AddEntry("text1",      'Mean error = %.4f'%mean_error,'')
+            legend.AddEntry("text1",      'Sigma = %.2f'%sigma,'')
+            if NDF != 0:
+                legend.AddEntry("text1",      '#chi^{2} = %.2f with %s d.o.f --> %.2f'%(chisq,NDF,(chisq/float(NDF))),'')
+            else:
+                legend.AddEntry("text1",      '#chi^{2} = %.2f with 0 d.o.f --> #chi^{2}_{red} is UNDEFINED'%chisq,'')
+            legend.Draw('same') 
         
 
     if log_y: c1.SetLogy()

@@ -882,3 +882,19 @@ def XYT_to_image(xyt_array, display = False):
      
     return my_image
     
+    
+def Make3DScatter(xs, ys, ts, tmin = -9999999, tmax = 9999999, xminmax = [0,255], yminmax = [0,255], savefile = ''):
+    import pylab as pl
+    import numpy as np
+    
+    fig = pl.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    
+    w = np.where(ts >= tmin and ts <= tmax)
+    ax.scatter(xs[w], ys[w], ts[w])
+    pl.xlim(xminmax)
+    pl.ylim(yminmax)
+    if savefile != '':
+        fig.savefig(savefile)
+    else:
+        pl.show()
