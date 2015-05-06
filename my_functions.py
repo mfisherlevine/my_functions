@@ -753,46 +753,44 @@ def CentroidTimepixCluster(data, save_path = None, fit_function = None):
     elif fit_function == 'p4':
         fit_func = TF2("f2",'[0]*(x-[1])^4 + [2]*(y-[3])^4 + [4]',0,xmax, 0, ymax)
         fit_func.SetParameters(-0.002,10,-0.002,8,15)
+    elif fit_function == None:
+       print 'Warning - not fitting clusters'
     else:
         print 'Error - unknown fit function'
         exit()
   
-#     fit_func = TF2("f2",'[0]*(x-[1])^2 + [2]*(y-[3])^2 + [4]',0,xmax, 0, ymax)
-#     fit_func.SetParameters(10,3,3,3,10)
-#     fit_func.SetParLimit(0,-99999999,0)
-#     fit_func.SetParLimit(2,-99999999,0)
-#     fit_func.SetParLimit(4, 0,99999999)
+    if fit_function != None:
+        image_hist.Fit(fit_func, 'MEQ')
+        true_xmax = fit_func.GetParameter(1)
+        true_ymax = fit_func.GetParameter(3)
+        true_tmax = fit_func.Eval(true_xmax, true_ymax) + tmin
+        chisq =  fit_func.GetChisquare()
+        NDF = fit_func.GetNDF()
+        try:
+            chisqred = chisq/NDF
+        except:
+            chisqred = 999999
 
-
     
+    if save_path!= None:
+        if fit_function == None:
+            image_hist.Draw('lego20z')
+            image_hist.GetZaxis().SetRangeUser(0,np.ceil(data.max() - tmin))
+            image_hist.SetStats(False)
+            c1.SaveAs(save_path)
+        else:
+            fit_func.SetNpx(1000)
+            image_hist.Draw('lego20')
+            fit_func.Draw("same")
+            zrange = np.ceil(true_tmax - tmin)
+            zrange = max(zrange,10, np.ceil(data.max() - tmin))
+            image_hist.GetZaxis().SetRangeUser(0,zrange)
+            image_hist.SetStats(False)
+            c1.SaveAs(save_path)
+            del c1
     
-    image_hist.Fit(fit_func, 'MEQ')
-    true_xmax = fit_func.GetParameter(1)
-    true_ymax = fit_func.GetParameter(3)
-    true_tmax = fit_func.Eval(true_xmax, true_ymax) + tmin
-#     print "xmax, ymax %s, %s"%(true_xmax,true_ymax)
-#     print "true tmax = %s"%(true_tmax)
-    
-    if save_path!= None: 
-        fit_func.SetNpx(1000)
-        image_hist.Draw('lego20')
-        fit_func.Draw("same")
-        image_hist.GetZaxis().SetRangeUser(0,np.ceil(true_tmax - tmin))
-        image_hist.SetStats(False)
-        c1.SaveAs(save_path)
-        del c1
-    
-    chisq =  fit_func.GetChisquare()
-    NDF = fit_func.GetNDF()
-    try:
-        chisqred = chisq/NDF
-    except:
-        chisqred = 9999
-        
-#     print 'ChiSq_red = %.2f'%chisqred
-    
-    
-    return true_xmax, true_ymax, true_tmax, chisqred
+    if fit_function != None: return true_xmax, true_ymax, true_tmax, chisqred
+    return 0, 0, 0, 0
     
 def GetMaxClusterTimecode(data):
     return np.amax(data[np.where(data >= 1)])
@@ -873,7 +871,7 @@ def XYT_to_image(xyt_array, display = False):
          
     n_counts = 0
     for x,y in zip(xs,ys):
-        if n_counts >= 10000: break
+        if n_counts >= 1000000: break
         n_counts += 1
         my_array[y,x] += 1
          
