@@ -61,6 +61,29 @@ intrinsic_offset = -75
 #     
 #     return my_image
 
+def BoxcarAverage1DArray(data, length):
+    return np.convolve(data, np.ones((length,))/length,mode='valid')
+
+
+def TranslatePImMSToTimepix(in_file, run_num, out_path):
+    data = np.loadtxt(in_file)
+    x = data[:,0] 
+    y = data[:,1] 
+    t = data[:,2]
+    shot = data[:,3]-1 #pimms shot number is 1-based, we want to fix that
+    
+    n_shots = int(shot[-1])
+    for i in range(n_shots):
+        indices = np.where(shot == i)
+        lines = []
+        for index in indices[0]:
+            lines.append(str(int(x[index])) + '\t'+ str(int(y[index])) + '\t'+ str(int(t[index]))+ '\n')
+        
+        file = open(out_path + str(run_num).rjust(2,'0') +'_'+ str(i+1).rjust(4,'0')+'.txt','w')
+        file.writelines(lines)
+        file.close()
+    
+    
 
 def TimepixToExposure_binary(filename, xmin, xmax, ymin, ymax, mask_pixels=np.ones((1), dtype = np.float64)):
     from lsst.afw.image import makeImageFromArray
@@ -224,7 +247,7 @@ def ReadBNL_PMTWaveform(filename):
     ys = data[:,1]
     return xs, ys
     
-def GetRawTimecodes_SingleFile(filename, winow_xmin = 0, winow_xmax = 999, winow_ymin = 0, winow_ymax = 999, offset_us = 0):
+def GetRawTimecodes_SingleFile(filename, winow_xmin = 0, winow_xmax = 999, winow_ymin = 0, winow_ymax = 999,tmin=-9999999,tmax=9999999, offset_us = 0):
     import string
     
     timecodes = []
@@ -236,7 +259,7 @@ def GetRawTimecodes_SingleFile(filename, winow_xmin = 0, winow_xmax = 999, winow
         y = int(y)
         timecode = int(timecode)
         if x >= winow_xmin and x <= winow_xmax and y >= winow_ymin and y <= winow_ymax: 
-            if timecode <> 11810:
+            if (timecode <= tmax) and (timecode >= tmin):
                 timecodes.append(timecode) 
 
     return timecodes
@@ -253,6 +276,8 @@ def GetTimecodes_AllFilesInDir(path, winow_xmin = 0, winow_xmax = 999, winow_ymi
 
     nfiles = 0
     for filename in files:
+        if str(filename).find('.DS')!=-1:continue
+        
         datafile = open(filename)
         nfiles += 1
         if len(files)>500 and (nfiles % 500 == 0): print 'Loaded %s of %s files'%(nfiles, len(files))
