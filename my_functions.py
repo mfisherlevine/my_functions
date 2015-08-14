@@ -264,7 +264,7 @@ def GetRawTimecodes_SingleFile(filename, winow_xmin = 0, winow_xmax = 999, winow
 
     return timecodes
 
-def GetTimecodes_AllFilesInDir(path, winow_xmin = 0, winow_xmax = 999, winow_ymin = 0, winow_ymax = 999, offset_us = 0, translate_to_us = False, glitch_threshold = 20000):
+def GetTimecodes_AllFilesInDir(path, winow_xmin = 0, winow_xmax = 999, winow_ymin = 0, winow_ymax = 999, offset_us = 0, translate_to_us = False, glitch_threshold = 20000, checkerboard_phase = None):
     import string, os
     
     timecodes = []
@@ -291,6 +291,11 @@ def GetTimecodes_AllFilesInDir(path, winow_xmin = 0, winow_xmax = 999, winow_ymi
             timecode = int(timecode)
             if timecode == 11810: continue  #discard overflows
             if timecode == 1: continue      #discard noise hits
+            
+            if checkerboard_phase is not None:
+                if (x+y)%2 == checkerboard_phase:
+                    timecode -= 1 
+            
             if x>=winow_xmin and x<=winow_xmax and y>=winow_ymin and y<=winow_ymax:
                 if translate_to_us == True:
                     actual_offset_us = 250 - offset_us
@@ -302,6 +307,72 @@ def GetTimecodes_AllFilesInDir(path, winow_xmin = 0, winow_xmax = 999, winow_ymi
 
     print "Loaded data from %s files"%nfiles
     return timecodes
+
+
+def GetMaxClusterTimecodes_AllFilesInDir(path, winow_xmin = 0, winow_xmax = 999, winow_ymin = 0, winow_ymax = 999, checkerboard_phase = None, npix_min = 1):
+    import os
+    all_timecodes = []
+    
+    files = os.listdir(path)
+    nfiles = len(files)
+    for i,filename in enumerate(files):
+        if i%500 == 0: print 'Centroided %s of %s files'%(i,nfiles)
+        codes = Clusterfind_max_timecode_one_file(path + filename, winow_xmin=winow_xmin, winow_xmax=winow_xmax, winow_ymin=winow_ymin, winow_ymax=winow_ymax, checkerboard_phase=checkerboard_phase, npix_min=npix_min)
+        all_timecodes.extend(codes)
+        
+    return all_timecodes
+
+def Clusterfind_max_timecode_one_file(filename, winow_xmin = 0, winow_xmax = 999, winow_ymin = 0, winow_ymax = 999, glitch_threshold = 20000, checkerboard_phase = None, npix_min = 1):
+    if str(filename).find('.DS')!=-1:return
+    
+    import lsst.afw.detection as afwDetect
+    import string, os
+    
+    cluster_sizes = []
+    timecodes = []
+    files = []
+    
+    thresholdValue = 1
+    npixMin = npix_min
+    grow = 0
+    isotropic = False
+    
+    image = TimepixToExposure(filename, winow_xmin, winow_xmax, winow_ymin, winow_ymax)
+    
+    threshold = afwDetect.Threshold(thresholdValue)
+    footPrintSet = afwDetect.FootprintSet(image, threshold, npixMin)
+    footPrintSet = afwDetect.FootprintSet(footPrintSet, grow, isotropic)
+    footPrints = footPrintSet.getFootprints()
+    
+    for footprintnum, footprint in enumerate(footPrints):
+        npix = afwDetect.Footprint.getNpix(footprint)
+        cluster_sizes.append(npix)
+        
+#         if npix >= 4:
+        box = footprint.getBBox()
+        bbox_xmin = box.getMinX()
+        bbox_xmax = box.getMaxX() + 1
+        bbox_ymin = box.getMinY()
+        bbox_ymax = box.getMaxY() + 1
+          
+        data = image.getArray()[bbox_ymin:bbox_ymax,bbox_xmin:bbox_xmax]        
+#         x,y,t,chisq = CentroidTimepixCluster(data, fit_function = 'gaus')
+#         timecodes.append(t)
+
+##         centroid_x, centroid_y = footprint.getCentroid()
+##         x += bbox_xmin
+##         y += bbox_ymin
+
+        if checkerboard_phase is not None:
+            print 'WARNING - Not yet implemented'
+            exit()
+            if (bbox_xmin+bbox_ymin)%2 == checkerboard_phase:
+                timecode -= 1 
+
+        timecodes.append(GetMaxClusterTimecode(data))
+
+    return timecodes
+
 
 
 def GetXYTarray_AllFilesInDir(path, winow_xmin = 0, winow_xmax = 999, winow_ymin = 0, winow_ymax = 999, offset_us = 0, tmin_us = -1000, tmax_us = 999999, maxfiles = None):
@@ -428,6 +499,45 @@ def MakeCompositeImage_Timepix(path, winow_xmin = 0, winow_xmax = 999, winow_ymi
     my_image = makeImageFromArray(my_array)
     if return_raw_array: return my_array
     return my_image
+
+
+
+def MakeCompositeImage_PImMS(path, winow_xmin = 0, winow_xmax = 999, winow_ymin = 0, winow_ymax = 999, offset_us = 0, maxfiles = None, t_min = -9999, t_max = 9999, return_raw_array = False):
+    from lsst.afw.image import makeImageFromArray
+    import string, os
+    import numpy as np
+    import pylab as pl
+    
+    my_array = np.zeros((72,72), dtype = np.int32)
+
+    files = []
+    for filename in os.listdir(path):
+        files.append(path + filename)
+
+    for filenum, filename in enumerate(files):
+        if filenum % 500 ==0: print "Compiled %s files"%filenum
+        
+        xs, ys, ts = GetXYTarray_SingleFile(filename, winow_xmin, winow_xmax, winow_ymin, winow_ymax)
+#         if len(xs) > 5000: continue # skip glitch files
+        
+        for i in range(len(xs)):
+            x = xs[i]
+            y = ys[i]
+            t = ts[i]
+            if x>=winow_xmin and x<=winow_xmax and y>=winow_ymin and y<=winow_ymax:
+                if t>=t_min and t<=t_max:
+                    my_array[x,y] += 1
+      
+      
+        if maxfiles != None and filenum >= maxfiles:
+            if return_raw_array: return my_array
+            my_image = makeImageFromArray(my_array)
+            return my_image
+        
+    my_image = makeImageFromArray(my_array)
+    if return_raw_array: return my_array
+    return my_image
+
 
 
 def TimecodeTo_us(timecode):
@@ -748,7 +858,10 @@ def MakeToFSpectrum(input_path, save_path, xmin=0, xmax=255, ymin=0, ymax=255, t
     
 def CentroidTimepixCluster(data, save_path = None, fit_function = None):
     import numpy as np
+    from ROOT import *
     from ROOT import TH2F, TCanvas, TBrowser, TF2
+    import ROOT
+    gROOT.SetBatch(1) #don't show drawing on the screen along the way    
     
     nbinsx = xmax = max(data.shape[0], data.shape[1])
     nbinsy = ymax = max(data.shape[0], data.shape[1])
