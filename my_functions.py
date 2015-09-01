@@ -264,7 +264,7 @@ def GetRawTimecodes_SingleFile(filename, winow_xmin = 0, winow_xmax = 999, winow
 
     return timecodes
 
-def GetTimecodes_AllFilesInDir(path, winow_xmin = 0, winow_xmax = 999, winow_ymin = 0, winow_ymax = 999, offset_us = 0, translate_to_us = False, glitch_threshold = 20000, checkerboard_phase = None):
+def GetTimecodes_AllFilesInDir(path, winow_xmin = 0, winow_xmax = 999, winow_ymin = 0, winow_ymax = 999, offset_us = 0, translate_to_us = False, glitch_threshold = 20000, checkerboard_phase = None, noise_mask = None):
     import string, os
     
     timecodes = []
@@ -288,6 +288,10 @@ def GetTimecodes_AllFilesInDir(path, winow_xmin = 0, winow_xmax = 999, winow_ymi
             x,y,timecode = string.split(str(line),'\t')
             x = int(x)
             y = int(y)
+            
+            if noise_mask is not None:
+                if noise_mask[x][y] == 0: continue
+            
             timecode = int(timecode)
             if timecode == 11810: continue  #discard overflows
             if timecode == 1: continue      #discard noise hits
