@@ -704,6 +704,63 @@ def ListVsList(list_x, list_y, savefile, xmin = None, xmax = None, xtitle = '', 
 
 
 
+def ListVsList_fit(list_x, list_y, savefile, xmin = None, xmax = None, xtitle = '', ytitle = '', setlogy = False, ymin = None, ymax = None, marker_color = None, set_grid = False, marker_style= None, marker_size=None, plot_opt = None, fitmin = None, fitmax = None):
+    from ROOT import TCanvas, TGraph
+    import numpy
+    
+    list_x = numpy.array(list_x, copy=False, dtype = 'f8', order ='C')
+    list_y = numpy.array(list_y, copy=False, dtype = 'f8', order ='C')
+    
+    c1 = TCanvas( 'canvas', 'canvas', 1200, 800)
+    
+    if len(list_x) != len(list_y):
+        print "ERROR - x and y sets are different sizes"
+        print str(savefile) + " was therefore not created"
+        return
+    
+    if xmin == None: xmin = min(list_x)
+    if xmax == None: xmax = max(list_x)
+
+    if ymin == None: ymin = min(list_y)
+    if ymax == None: ymax = max(list_y)
+    
+    if marker_color == None: marker_color = 2
+    if marker_style == None: marker_style = 2
+    if marker_size == None: marker_size = 0.8
+    if plot_opt == None: plot_opt = 'AP'
+    if fitmin == None: fitmin = xmin
+    if fitmax == None: fitmax = xmax
+        
+    graph = TGraph(len(list_x), list_x, list_y) #populate graph with data points
+    graph.SetTitle('')
+    graph.GetXaxis().SetRangeUser(xmin,xmax)
+    graph.GetYaxis().SetRangeUser(ymin,ymax)
+    graph.GetXaxis().SetTitle(xtitle)
+    graph.GetYaxis().SetTitle(ytitle)
+    graph.SetMarkerColor(marker_color)
+    graph.SetMarkerStyle(marker_style)
+    graph.SetMarkerSize(marker_size)
+    
+#     func = TF1('my_func', 'gaus(0)+pol1(3)', fitmin, fitmax)
+#     func.SetParameters(1.01,234.5,30.7,0.01,0.01)
+#     func.SetParLimits(2,0.01,100)
+#     graph.Fit('my_func', 'ME','',fitmin, fitmax)
+    
+    graph.Fit('gaus', 'ME','',fitmin, fitmax)
+    func = graph.GetFunction('gaus')
+    func.SetNpx(1000)
+    func.SetLineColor(marker_color+1)
+    
+    if set_grid: c1.SetGrid()
+    graph.Draw(plot_opt)
+    if setlogy: c1.SetLogy()
+    c1.SaveAs(savefile)
+    return graph
+
+
+
+
+
 
 
 if __name__=="__main__": # main code block
