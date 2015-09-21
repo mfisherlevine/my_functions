@@ -618,7 +618,7 @@ def DoubleGausFit(hist, fitmin, fitmax):
 
 
 
-def ListToHist(list, savefile, log_y = False, nbins = 20, histmin = None, histmax = None, name = '', fit_gaus = False, fit_to_percentage_of_peak = 5, draw_fit_stats = True):
+def ListToHist(list, savefile, log_y = False, nbins = 20, histmin = None, histmax = None, name = '', fit_gaus = False, fit_to_percentage_of_peak = 5, draw_fit_stats = True, normalise = False):
     from ROOT import TCanvas, TH1F
     import numpy as np
     c1 = TCanvas( 'canvas', 'canvas', 1200,800) #create canvas
@@ -633,7 +633,11 @@ def ListToHist(list, savefile, log_y = False, nbins = 20, histmin = None, histma
             print 'excluded inf/nan value'
             continue
         hist.Fill(value)
-    hist.Draw()
+
+    if normalise:
+        hist.DrawNormalized()
+    else:
+        hist.Draw()
 
     if fit_gaus:
         fitmin, fitmax = GetLeftRightBinsAtPercentOfMax(hist,fit_to_percentage_of_peak)
@@ -748,6 +752,7 @@ def ListVsList_fit(list_x, list_y, savefile, xmin = None, xmax = None, xtitle = 
     
     graph.Fit('gaus', 'ME','',fitmin, fitmax)
     func = graph.GetFunction('gaus')
+    sigma = func.GetParameter(2)
     func.SetNpx(1000)
     func.SetLineColor(marker_color+1)
     
@@ -755,7 +760,7 @@ def ListVsList_fit(list_x, list_y, savefile, xmin = None, xmax = None, xtitle = 
     graph.Draw(plot_opt)
     if setlogy: c1.SetLogy()
     c1.SaveAs(savefile)
-    return graph
+    return sigma, graph
 
 
 

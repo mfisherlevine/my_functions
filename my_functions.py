@@ -5,6 +5,7 @@ import numpy as np
 
 from lsst.afw.image import makeImageFromArray
 from time import sleep
+from matplotlib.pyplot import ylim
 
 
 intrinsic_offset = -75
@@ -548,9 +549,23 @@ def TimecodeTo_us(timecode):
     return (11810. - timecode) * 0.02 # 20e-9 * 1e6
 
 
-def OpenTimepixInDS9(filename):
+def OpenTimepixInDS9(filename, binary = False):
     import lsst.afw.display.ds9 as ds9
-    image = TimepixToExposure(filename, 0,255,0,255)
+    if binary:
+        image,dummy = TimepixToExposure_binary(filename, 0,255,0,255)
+    else:
+        image = TimepixToExposure(filename, 0,255,0,255)
+
+    try:
+        ds9.initDS9(False)
+    except ds9.Ds9Error:
+        print 'DS9 launch bug error thrown away (probably)'
+
+    ds9.mtv(image)
+    
+    
+def OpenImageInDS9(image):
+    import lsst.afw.display.ds9 as ds9
 
     try:
         ds9.initDS9(False)
@@ -843,7 +858,7 @@ def MakeToFSpectrum(input_path, save_path, xmin=0, xmax=255, ymin=0, ymax=255, t
      
     fig = pl.figure()
     
-    pl.hist(timecodes, bins = bins, range = [tmin,tmax]) #make the histogram of the timecodes
+    vals, bins, pathches = pl.hist(timecodes, bins = bins, range = [tmin,tmax]) #make the histogram of the timecodes
     
 #     pl.ylim([0,2000]) #for clipping the y-axis
     
@@ -856,8 +871,12 @@ def MakeToFSpectrum(input_path, save_path, xmin=0, xmax=255, ymin=0, ymax=255, t
     fig.savefig(save_path + '_ToF_Full.png')
 
     tmin, tmax = time_zoom_region
+    ylim = max(vals[tmin:tmax])
+    ylim *= 1.2
+    pl.ylim([0,ylim]) #for clipping the x-axis
     pl.xlim([tmin,tmax]) #for clipping the x-axis
     fig.savefig(save_path + '_ToF_ROI.png')
+    print 'Finished making ToF'
     
     
 def CentroidTimepixCluster(data, save_path = None, fit_function = None):
