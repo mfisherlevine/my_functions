@@ -421,6 +421,8 @@ def GetXYTarray_AllFilesInDir(path, winow_xmin = 0, winow_xmax = 999, winow_ymin
                 actual_offset_us = intrinsic_offset - offset_us
                 time_s = (11810. - timecode) * 20e-9
                 time_us = (time_s *1e6)- actual_offset_us
+#                 print time_us
+#                 exit()
                 if time_us>=tmin_us and time_us<= tmax_us:
                     xs.append(x)
                     ys.append(y)
@@ -434,6 +436,23 @@ def GetXYTarray_AllFilesInDir(path, winow_xmin = 0, winow_xmax = 999, winow_ymin
 
     return xs, ys, ts  
 
+
+
+def ShowRawToF_whole_dir(path, invert = False, logy = False):
+    import pylab as pl
+    raw_codes = GetTimecodes_AllFilesInDir(path, 0, 256, 0, 256, 0, checkerboard_phase = None)
+
+    fig = pl.figure(figsize=(14,10))
+    
+    if invert:
+        n_codes, bins, patches = pl.hist([11810-i for i in raw_codes], bins = 11810, range = [0,11810])
+    else:
+        n_codes, bins, patches = pl.hist(raw_codes, bins = 11810, range = [0,11810])
+    
+    if logy: pl.yscale('log', nonposy='clip')
+
+    
+    pl.show()
 
 def MakeCompositeImage_Medipix(path, winow_xmin = 0, winow_xmax = 999, winow_ymin = 0, winow_ymax = 999, offset_us = 0, maxfiles = None):
     from lsst.afw.image import makeImageFromArray
