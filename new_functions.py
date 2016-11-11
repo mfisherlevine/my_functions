@@ -602,6 +602,15 @@ def FilterPeaks():
 
 ###################################################
 
+def CollapseBands(band_list):
+    collapsed = []
+    for (a,b) in band_list:
+        if a not in collapsed: collapsed.append(a)
+        if b not in collapsed: collapsed.append(b)
+    return collapsed
+
+###################################################
+
 def GetMaxCodeFromCluster(cluster, _original_image):
     _timecodes = []
     for [x,y] in cluster:
@@ -942,7 +951,10 @@ def SetFont():
     rc('font',**{'family':'serif','serif':['Computer Modern Roman']})
     rc('text', usetex=True)
     
-def GetFiles(path, pattern='*'):
+def GetFiles(path, pattern='*', silent=False):
+    #TODO: make ability to recursively walk tree down from path
     import glob, os
     files = glob.glob(os.path.join(path,pattern))
-    return [_ for _ in files if _.find('.DS')==-1]
+    files = [_ for _ in files if _.find('.DS')==-1 and os.path.isfile(_)]
+    if not silent: print 'Found %s matching files'%len(files)
+    return files
