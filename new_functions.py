@@ -950,6 +950,14 @@ def SetFont():
     from matplotlib import rc
     rc('font',**{'family':'serif','serif':['Computer Modern Roman']})
     rc('text', usetex=True)
+
+def SetAxisScaleAbsolute():
+    import matplotlib
+    matplotlib.rcParams['axes.formatter.useoffset'] = False
+
+def SetColourCycle():
+    import matplotlib
+    matplotlib.rcParams['axes.color_cycle'] = [u'#4c72b0', u'#55a868', u'#c44e52', u'#8172b2', u'#ccb974', u'#64b5cd']
     
 def GetFiles(path, pattern='*', silent=False):
     #TODO: make ability to recursively walk tree down from path
@@ -958,3 +966,56 @@ def GetFiles(path, pattern='*', silent=False):
     files = [_ for _ in files if _.find('.DS')==-1 and os.path.isfile(_)]
     if not silent: print 'Found %s matching files'%len(files)
     return files
+
+def ShowColourMaps():
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    def grayify_cmap(cmap):
+        """Return a grayscale version of the colormap"""
+        cmap = plt.cm.get_cmap(cmap)
+        colors = cmap(np.arange(cmap.N))
+        
+        # convert RGBA to perceived greyscale luminance
+        # cf. http://alienryderflex.com/hsp.html
+        RGB_weight = [0.299, 0.587, 0.114]
+        luminance = np.sqrt(np.dot(colors[:, :3] ** 2, RGB_weight))
+        colors[:, :3] = luminance[:, np.newaxis]
+        
+        return cmap.from_list(cmap.name + "_grayscale", colors, cmap.N)
+
+    fig, axes = plt.subplots(36, 6, figsize=(20, 14))
+    fig.subplots_adjust(left=0, right=1, bottom=0, top=1,
+                        hspace=0.1, wspace=0.1)
+
+    im = np.outer(np.ones(10), np.arange(100))
+
+    cmaps = [m for m in plt.cm.datad if not m.endswith("_r")]
+    cmaps.sort()
+
+    axes = axes.T.ravel()
+    for ax in axes:
+        ax.axis('off')
+
+    for cmap, color_ax, gray_ax, null_ax in zip(cmaps, axes[1::3], axes[2::3], axes[::3]):
+        del null_ax
+        color_ax.set_title(cmap, fontsize=10)
+        color_ax.imshow(im, cmap=cmap)
+        gray_ax.imshow(im, cmap=grayify_cmap(cmap))
+
+
+def random_sign():
+    import numpy as np
+    return (-1.)**np.random.randint(0,2) #upper bound is exclusive
+
+def myHistBinsizeOne(data, histmin, histmax, relative_normalisation=False, plot=True):
+    from scipy import ndimage
+    import pylab as plt
+    ys = np.zeros(((histmax-histmin)+1,), dtype=np.int64)
+    xs = np.linspace(histmin,histmax,(histmax-histmin+1)) # make x points for ToF plot
+    assert xs[1]-xs[0]==1 #ensure x-axis space is exactly 1
+
+    ys = ndimage.histogram(data,histmin,histmax,bins = (histmax-histmin)+1) #much faster than pl.hist
+    if relative_normalisation: ys = np.asarray(ys, dtype=np.float64) / np.max(ys)
+    if plot: plt.step(xs, ys)
+    return xs, ys
