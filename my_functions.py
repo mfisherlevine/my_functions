@@ -7,6 +7,16 @@ from lsst.afw.image import makeImageFromArray
 from time import sleep
 from matplotlib.pyplot import ylim
 
+import shutil
+import os
+import filecmp
+import pyfits as pf
+import sys
+import glob
+import functions as fn
+fn = reload(fn)
+
+
 
 intrinsic_offset = -75
 
@@ -61,6 +71,61 @@ intrinsic_offset = -75
 #         my_image = makeImageFromArray(my_array)
 #     
 #     return my_image
+
+
+def SafeCopy(src, dest):
+    if os.path.exists(dest):
+        print 'warning, tried to overwrite %s with %s'%(dest, src)
+        if filecmp.cmp(src, dest):
+            print 'but it\'s OK, the files were the same anyway'
+        else:
+            print 'DISASTER - the files were different!\n\n\n'
+    else:
+        shutil.copy(src,dest)
+        
+def SafeMove(src, dest):
+    if os.path.exists(dest):
+        print 'warning, tried to overwrite %s with %s'%(dest, src)
+        if filecmp.cmp(src, dest):
+            print 'but it\'s OK, the files were the same anyway'
+        else:
+            print 'DISASTER - the files were different!\n\n\n'
+    else:
+        shutil.move(src,dest)      
+        
+def ReverseDictionary(input_dict):
+    return dict((v,k) for k,v in input_dict.iteritems())
+
+def GetFilename(filename_or_path):
+    return str(filename_or_path).split('/')[-1]
+
+def SafeCopyDir(src_dir, dest_dir, prepend_date=True, skip_eko_files=True):
+    files = [_ for _ in os.listdir(src_dir) if os.path.isfile(os.path.join(src_dir,_))] #grab files, reject directories
+    for fname in files:
+        if skip_eko_files:
+            if fname.find('eko')!=-1: continue
+        source_filename = os.path.join(src_dir, fname)
+        if prepend_date:
+            try:
+                d_file = pf.open(source_filename)
+                primaryHeader = d_file[0].header
+                date = primaryHeader['DATE-OBS'].split('T')[0]
+                d_file.close()
+            except Exception, e:
+                print repr(e)
+                print 'no date found for prepending in %s'%source_filename
+                date = ''
+                
+        dest_filename = os.path.join(dest_dir, date + fname)
+        if os.path.exists(dest_filename):
+            print 'warning: tried to overwrite %s with %s'%(dest_filename, source_filename)
+            if filecmp.cmp(source_filename, dest_filename):
+                print 'but it\'s OK, the files were the same anyway'
+            else:
+                print '\n\n *** DISASTER - the files were different!*** \n\n\n'
+        else:
+            shutil.copy(source_filename,dest_filename)
+
 
 def BoxcarAverage1DArray(data, length):
     return np.convolve(data, np.ones((length,))/length,mode='valid')
