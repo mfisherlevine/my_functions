@@ -1,4 +1,6 @@
 from __future__ import print_function
+from builtins import str
+from builtins import range
 def raDecStrToFloat(raStr, decStr):
     h, m, s = [float(_) for _ in raStr.split(":")]
     ra = 15*(h + (m + s/60.0)/60.0)
@@ -369,13 +371,13 @@ def GetExpNumsPerFilterDictFromDir(path):
         filt = this_file[0].header['FILTER']
         this_file.close()
         
-        if not filt in ret.keys():
+        if not filt in list(ret.keys()):
             ret[filt] = []
             ret[filt].append(expNum)
         else:
             ret[filt].append(expNum)
     
-    for filt, expNums in ret.iteritems():
+    for filt, expNums in ret.items():
         caret_sep = str(sorted(expNums)).replace(', ','^').replace('[','').replace(']','')
         print(filt +': '+ caret_sep)
     return ret

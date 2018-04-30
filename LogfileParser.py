@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+from builtins import object
 class LogfileParser(object):
     '''A for-me-only class for sorting out the jumbled mess that is output by multiprocessed data with processCcd.py'''
     
@@ -59,7 +60,7 @@ class LogfileParser(object):
         return discarded_lines
 
     def ShowLog(self):
-        for key in self.parsed_log.keys():
+        for key in list(self.parsed_log.keys()):
             for line in self.parsed_log[key]:
                 print(key + ': ' + line)
             print()
@@ -68,7 +69,7 @@ class LogfileParser(object):
         print('Rewrote?')
         
         with open(output_filename, mode='w') as f:
-            for key in self.parsed_log.keys():
+            for key in list(self.parsed_log.keys()):
                 f.write(key + ': ' + line + '\n')
             f.write('\n')
 
@@ -80,14 +81,14 @@ class LogfileParser(object):
 
 
     def ShowLog(self):
-        for key in self.parsed_log.keys():
+        for key in list(self.parsed_log.keys()):
             for line in self.parsed_log[key]:
                 f.write(key + ': ' + line + '\n')
             f.write('\n')
 
     def _RewriteLogfileInOrder(self, output_filename):
         with open(output_filename, mode='w') as f:
-            for key in self.parsed_log.keys():
+            for key in list(self.parsed_log.keys()):
                 for line in self.parsed_log[key]:
                     print(key + ': ' + line)
                 print()
@@ -130,7 +131,7 @@ class LogfileParser(object):
                     fatal_line = info_dict[key][linenum].rstrip()
 
                     failure_mode = last_line.split(':')[0]
-                    if failure_mode not in ret['meta'].keys():
+                    if failure_mode not in list(ret['meta'].keys()):
                         ret['meta'][failure_mode] = 1
                     else:
                         ret['meta'][failure_mode] += 1

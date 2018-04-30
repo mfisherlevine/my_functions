@@ -1,7 +1,12 @@
 from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import zip
+from builtins import str
+from builtins import range
 from _ctypes import Array
 from numpy import array
-from __builtin__ import open
+from builtins import open
 import numpy as np
 
 from lsst.afw.image import makeImageFromArray
@@ -96,7 +101,7 @@ def SafeMove(src, dest):
         shutil.move(src,dest)      
         
 def ReverseDictionary(input_dict):
-    return dict((v,k) for k,v in input_dict.iteritems())
+    return dict((v,k) for k,v in input_dict.items())
 
 def GetFilename(filename_or_path):
     return str(filename_or_path).split('/')[-1]
@@ -1061,7 +1066,7 @@ def GetAllTimecodesInCluster(data):
     return timecodes
     
 def Combine_and_pickle_dir(path, output_pickle):
-    import cPickle as pickle
+    import pickle as pickle
     import os
     import pylab as pl
     
@@ -1100,7 +1105,7 @@ def Combine_and_pickle_dir(path, output_pickle):
     pickle.dump(data_array, open(output_pickle,'wb'), pickle.HIGHEST_PROTOCOL)
     
 def Load_XYT_pickle(filename):
-    import cPickle as pickle
+    import pickle as pickle
     return pickle.load(open(filename, 'rb'))
     
 def XYT_to_image(xyt_array, display = False):
