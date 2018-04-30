@@ -1,3 +1,4 @@
+from __future__ import print_function
 from _ctypes import Array
 from numpy import array
 from __builtin__ import open
@@ -76,21 +77,21 @@ intrinsic_offset = -75
 
 def SafeCopy(src, dest):
     if os.path.exists(dest):
-        print 'warning, tried to overwrite %s with %s'%(dest, src)
+        print('warning, tried to overwrite %s with %s'%(dest, src))
         if filecmp.cmp(src, dest):
-            print 'but it\'s OK, the files were the same anyway'
+            print('but it\'s OK, the files were the same anyway')
         else:
-            print 'DISASTER - the files were different!\n\n\n'
+            print('DISASTER - the files were different!\n\n\n')
     else:
         shutil.copy(src,dest)
         
 def SafeMove(src, dest):
     if os.path.exists(dest):
-        print 'warning, tried to overwrite %s with %s'%(dest, src)
+        print('warning, tried to overwrite %s with %s'%(dest, src))
         if filecmp.cmp(src, dest):
-            print 'but it\'s OK, the files were the same anyway'
+            print('but it\'s OK, the files were the same anyway')
         else:
-            print 'DISASTER - the files were different!\n\n\n'
+            print('DISASTER - the files were different!\n\n\n')
     else:
         shutil.move(src,dest)      
         
@@ -112,18 +113,18 @@ def SafeCopyDir(src_dir, dest_dir, prepend_date=True, skip_eko_files=True):
                 primaryHeader = d_file[0].header
                 date = primaryHeader['DATE-OBS'].split('T')[0]
                 d_file.close()
-            except Exception, e:
-                print repr(e)
-                print 'no date found for prepending in %s'%source_filename
+            except Exception as e:
+                print(repr(e))
+                print('no date found for prepending in %s'%source_filename)
                 date = ''
                 
         dest_filename = os.path.join(dest_dir, date + fname)
         if os.path.exists(dest_filename):
-            print 'warning: tried to overwrite %s with %s'%(dest_filename, source_filename)
+            print('warning: tried to overwrite %s with %s'%(dest_filename, source_filename))
             if filecmp.cmp(source_filename, dest_filename):
-                print 'but it\'s OK, the files were the same anyway'
+                print('but it\'s OK, the files were the same anyway')
             else:
-                print '\n\n *** DISASTER - the files were different!*** \n\n\n'
+                print('\n\n *** DISASTER - the files were different!*** \n\n\n')
         else:
             shutil.copy(source_filename,dest_filename)
 
@@ -352,7 +353,7 @@ def GetTimecodes_AllFilesInDir(path, winow_xmin = 0, winow_xmax = 999, winow_ymi
         
         datafile = open(filename)
         nfiles += 1
-        if len(files)>500 and (nfiles % 500 == 0): print 'Loaded %s of %s files'%(nfiles, len(files))
+        if len(files)>500 and (nfiles % 500 == 0): print('Loaded %s of %s files'%(nfiles, len(files)))
         lines = datafile.readlines()
         
         if len(lines) > glitch_threshold: continue #skip files which glitched (most pixels hit - parameter may need tuning)
@@ -381,7 +382,7 @@ def GetTimecodes_AllFilesInDir(path, winow_xmin = 0, winow_xmax = 999, winow_ymi
                 else:
                     timecodes.append(timecode)
 
-    print "Loaded data from %s files"%nfiles
+    print("Loaded data from %s files"%nfiles)
     return timecodes
 
 
@@ -392,7 +393,7 @@ def GetMaxClusterTimecodes_AllFilesInDir(path, winow_xmin = 0, winow_xmax = 999,
     files = os.listdir(path)
     nfiles = len(files)
     for i,filename in enumerate(files):
-        if i%500 == 0: print 'Centroided %s of %s files'%(i,nfiles)
+        if i%500 == 0: print('Centroided %s of %s files'%(i,nfiles))
         codes = Clusterfind_max_timecode_one_file(path + filename, winow_xmin=winow_xmin, winow_xmax=winow_xmax, winow_ymin=winow_ymin, winow_ymax=winow_ymax, checkerboard_phase=checkerboard_phase, npix_min=npix_min)
         all_timecodes.extend(codes)
         
@@ -440,7 +441,7 @@ def Clusterfind_max_timecode_one_file(filename, winow_xmin = 0, winow_xmax = 999
 ##         y += bbox_ymin
 
         if checkerboard_phase is not None:
-            print 'WARNING - Not yet implemented'
+            print('WARNING - Not yet implemented')
             exit()
             if (bbox_xmin+bbox_ymin)%2 == checkerboard_phase:
                 timecode -= 1 
@@ -465,7 +466,7 @@ def GetXYTarray_AllFilesInDir(path, winow_xmin = 0, winow_xmax = 999, winow_ymin
     for filename in files:
         data = pl.loadtxt(filename, usecols = (0,1,2))
         num +=1
-        if (num % 10 == 0): print 'loaded %s files'%num
+        if (num % 10 == 0): print('loaded %s files'%num)
         
         #handle problem with the way loadtxt reads single line data files
         if data.shape == (3,): 
@@ -541,7 +542,7 @@ def MakeCompositeImage_Medipix(path, winow_xmin = 0, winow_xmax = 999, winow_ymi
     for filename in files:
         data = pl.loadtxt(filename, usecols = (0,1,2))
         num +=1
-        if (num % 10 == 0): print 'loaded %s files'%num
+        if (num % 10 == 0): print('loaded %s files'%num)
         
         for i in range(len(data)):
             x = int(data[i,0])
@@ -572,7 +573,7 @@ def MakeCompositeImage_Timepix(path, winow_xmin = 0, winow_xmax = 999, winow_ymi
         files.append(path + filename)
 
     for filenum, filename in enumerate(files):
-        if filenum % 500 ==0: print "Compiled %s files"%filenum
+        if filenum % 500 ==0: print("Compiled %s files"%filenum)
         
         xs, ys, ts = GetXYTarray_SingleFile(filename, winow_xmin, winow_xmax, winow_ymin, winow_ymax)
 #         if len(xs) > 5000: continue # skip glitch files
@@ -610,7 +611,7 @@ def MakeCompositeImage_PImMS(path, winow_xmin = 0, winow_xmax = 999, winow_ymin 
         files.append(path + filename)
 
     for filenum, filename in enumerate(files):
-        if filenum % 500 ==0: print "Compiled %s files"%filenum
+        if filenum % 500 ==0: print("Compiled %s files"%filenum)
         
         xs, ys, ts = GetXYTarray_SingleFile(filename, winow_xmin, winow_xmax, winow_ymin, winow_ymax)
 #         if len(xs) > 5000: continue # skip glitch files
@@ -649,7 +650,7 @@ def OpenTimepixInDS9(filename, binary = False):
     try:
         ds9.initDS9(False)
     except ds9.Ds9Error:
-        print 'DS9 launch bug error thrown away (probably)'
+        print('DS9 launch bug error thrown away (probably)')
 
     ds9.mtv(image)
     
@@ -660,7 +661,7 @@ def OpenImageInDS9(image):
     try:
         ds9.initDS9(False)
     except ds9.Ds9Error:
-        print 'DS9 launch bug error thrown away (probably)'
+        print('DS9 launch bug error thrown away (probably)')
 
     ds9.mtv(image)
     
@@ -781,7 +782,7 @@ def TimepixDirToPImMMSDatafile(path, outfile_name, winow_xmin = 0, winow_xmax = 
 
     for filenum, filename in enumerate(files):
         data = pl.loadtxt(filename, usecols = (0,1,2))
-        if (filenum % 100 == 0): print 'loaded %s files'%filenum
+        if (filenum % 100 == 0): print('loaded %s files'%filenum)
         
         #handle problem with the way loadtxt reads single line data files
         if data.shape == (3,): 
@@ -876,7 +877,7 @@ def BoxcarAverage2DArray(array, boxcar_size):
     if boxcar_size == 1:
         return array
     if boxcar_size < 1:
-        print "Error - Boxcar size cannot be less than 1"
+        print("Error - Boxcar size cannot be less than 1")
         exit()
         
     ret = np.zeros((xsize - (boxcar_size - 1),ysize - (boxcar_size - 1)), dtype = np.float32)
@@ -900,7 +901,7 @@ def GetXYTarray_AllFilesInDir_Raw_Timecodes(path, winow_xmin = 0, winow_xmax = 9
     for filename in files:
         data = pl.loadtxt(filename, usecols = (0,1,2))
         num +=1
-        if (num % 100 == 0): print 'loaded %s files'%num
+        if (num % 100 == 0): print('loaded %s files'%num)
         
         #handle problem with the way loadtxt reads single line data files
         if data.shape == (3,): 
@@ -935,7 +936,7 @@ def MakeToFSpectrum(input_path, save_path, xmin=0, xmax=255, ymin=0, ymax=255, t
     import pylab as pl
     
     timecodes = GetTimecodes_AllFilesInDir(input_path, xmin, xmax, ymin, ymax, 110, translate_to_us)
-    print 'Total number of timecodes read in = %s' %len(timecodes)
+    print('Total number of timecodes read in = %s' %len(timecodes))
      
     if translate_to_us:
         tmin = 5
@@ -966,7 +967,7 @@ def MakeToFSpectrum(input_path, save_path, xmin=0, xmax=255, ymin=0, ymax=255, t
     pl.ylim([0,ylim]) #for clipping the x-axis
     pl.xlim([tmin,tmax]) #for clipping the x-axis
     fig.savefig(save_path + '_ToF_ROI.png')
-    print 'Finished making ToF'
+    print('Finished making ToF')
     
     
 def CentroidTimepixCluster(data, save_path = None, fit_function = None):
@@ -1005,9 +1006,9 @@ def CentroidTimepixCluster(data, save_path = None, fit_function = None):
         fit_func = TF2("f2",'[0]*(x-[1])^4 + [2]*(y-[3])^4 + [4]',0,xmax, 0, ymax)
         fit_func.SetParameters(-0.002,10,-0.002,8,15)
     elif fit_function == None:
-       print 'Warning - not fitting clusters'
+       print('Warning - not fitting clusters')
     else:
-        print 'Error - unknown fit function'
+        print('Error - unknown fit function')
         exit()
   
     if fit_function != None:
@@ -1072,7 +1073,7 @@ def Combine_and_pickle_dir(path, output_pickle):
 
     for filenum, filename in enumerate(files):
         data = pl.loadtxt(filename, usecols = (0,1,2))
-        if (filenum % 500 == 0): print 'loaded %s of %s files'%(filenum, len(files))
+        if (filenum % 500 == 0): print('loaded %s of %s files'%(filenum, len(files)))
         
         #handle problem with the way loadtxt reads single line data files
         if data.shape == (3,): 
@@ -1110,7 +1111,7 @@ def XYT_to_image(xyt_array, display = False):
         try:
             ds9.initDS9(False)
         except ds9.Ds9Error:
-            print
+            print()
 
     my_array = np.zeros((256,256), dtype = np.int32)
      

@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 class LogfileParser(object):
     '''A for-me-only class for sorting out the jumbled mess that is output by multiprocessed data with processCcd.py'''
@@ -21,7 +22,7 @@ class LogfileParser(object):
 
     def __setattr__(self, attribute, value):
         if not attribute in self.__dict__:
-            print "Cannot set %s" % attribute
+            print("Cannot set %s" % attribute)
         else:
             self.__dict__[attribute] = value
 
@@ -60,11 +61,11 @@ class LogfileParser(object):
     def ShowLog(self):
         for key in self.parsed_log.keys():
             for line in self.parsed_log[key]:
-                print key + ': ' + line
-            print
+                print(key + ': ' + line)
+            print()
 
     def _RewriteLogfileInOrder(self, output_filename):
-        print 'Rewrote?'
+        print('Rewrote?')
         
         with open(output_filename, mode='w') as f:
             for key in self.parsed_log.keys():
@@ -88,8 +89,8 @@ class LogfileParser(object):
         with open(output_filename, mode='w') as f:
             for key in self.parsed_log.keys():
                 for line in self.parsed_log[key]:
-                    print key + ': ' + line
-                print
+                    print(key + ': ' + line)
+                print()
         
 
     # def _RewriteLogfileInOrder(self, output_filename):

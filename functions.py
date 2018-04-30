@@ -1,3 +1,4 @@
+from __future__ import print_function
 def raDecStrToFloat(raStr, decStr):
     h, m, s = [float(_) for _ in raStr.split(":")]
     ra = 15*(h + (m + s/60.0)/60.0)
@@ -17,7 +18,7 @@ def SideBySide(images, half_stretch=3, smoothing=1, fix_scales=True, saveas = ''
     import numpy as np
 
     if type(images)!=list:
-        print 'Please provide a list of images to be plotted side by side'
+        print('Please provide a list of images to be plotted side by side')
         return
     
     from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -33,9 +34,9 @@ def SideBySide(images, half_stretch=3, smoothing=1, fix_scales=True, saveas = ''
         elif str(type(images[i]))=='<type \'numpy.ndarray\'>':
             raw_data = images[i]
         else:
-            print 'Error: You passed a list of type %s,\
+            print('Error: You passed a list of type %s,\
             you can either pass a list of arrays or a list\
-            of ExposureF\'s (at the moment)'%type(images[i])
+            of ExposureF\'s (at the moment)'%type(images[i]))
             return
         
         im_data = gaussian_filter(raw_data,smoothing)
@@ -97,11 +98,11 @@ def SideBySide(images, half_stretch=3, smoothing=1, fix_scales=True, saveas = ''
             fig.savefig(saveas)
             from os import getcwd
             if saveas[0]=='/':
-                print "Saved figure to %s"%saveas
+                print("Saved figure to %s"%saveas)
             else:
-                print "Saved figure to %s"%(str(getcwd() + '/' + saveas))
+                print("Saved figure to %s"%(str(getcwd() + '/' + saveas)))
         except:
-            print "failed to save figure as %s"%saveas
+            print("failed to save figure as %s"%saveas)
 
 
 def getClippedMeanandStddev(data, nsig=3):
@@ -113,7 +114,7 @@ def getClippedMeanandStddev(data, nsig=3):
 
 def focal_plane_to_image(im_data, save_file='', half_stretch=3, smoothing=0, colormap='gray'):
     if save_file == '':
-        print 'Must supply output filename'
+        print('Must supply output filename')
         return
     
 #     from scipy.ndimage.filters import gaussian_filter
@@ -123,7 +124,7 @@ def focal_plane_to_image(im_data, save_file='', half_stretch=3, smoothing=0, col
     
 #     im_data = gaussian_filter(image.getMaskedImage().getImage().getArray(),smoothing)
 #     im_data = image.getMaskedImage().getImage().getArray()
-    print im_data.shape
+    print(im_data.shape)
     im_mean = np.mean(im_data)
     vmin = im_mean - half_stretch
     vmax = im_mean + half_stretch
@@ -139,9 +140,9 @@ def focal_plane_to_image(im_data, save_file='', half_stretch=3, smoothing=0, col
     fig.savefig(save_file)
     from os import getcwd
     if save_file[0]=='/':
-        print "Saved figure to %s"%save_file
+        print("Saved figure to %s"%save_file)
     else:
-        print "Saved figure to %s"%(str(getcwd() + '/' + save_file))
+        print("Saved figure to %s"%(str(getcwd() + '/' + save_file)))
 #     except:
 #         print "failed to save figure as %s"%save_file
 
@@ -204,11 +205,11 @@ def ShowSpot(raw_data, half_stretch=-1, smoothing=0, saveas = '', colormap='CMRm
             fig.savefig(saveas)
             from os import getcwd
             if saveas[0]=='/':
-                print "Saved figure to %s"%saveas
+                print("Saved figure to %s"%saveas)
             else:
-                print "Saved figure to %s"%(str(getcwd() + '/' + saveas))
+                print("Saved figure to %s"%(str(getcwd() + '/' + saveas)))
         except:
-            print "failed to save figure as %s"%saveas
+            print("failed to save figure as %s"%saveas)
 
             
 def SurfPlot(data):
@@ -220,7 +221,7 @@ def SurfPlot(data):
     import numpy as np
 
     ncols, nrows = data.shape
-    if ncols * nrows > 20000: print 'Warning, surface plotting things of this size is slow...'
+    if ncols * nrows > 20000: print('Warning, surface plotting things of this size is slow...')
     z = data
     x = np.linspace(0, ncols, ncols)
     y = np.linspace(0, nrows, nrows)
@@ -269,7 +270,7 @@ def printHeaderData(filename,hduNum=0, max_lines = 1e9, return_not_print=False):
         if return_not_print:
             ret.append(str(key) + ':' + str(primaryHDU.header[key]))
         else:
-            print key, primaryHDU.header[key]
+            print(key, primaryHDU.header[key])
     
     this_file.close()
     if return_not_print: return ret
@@ -280,7 +281,7 @@ def CoaddExposures(exposures, outnumber, datapath='/nfs/lsst2/photocalData/data/
     import sys
     
     N_HDUS = 70
-    print 'Coadding %s'%(exposures); sys.stdout.flush()
+    print('Coadding %s'%(exposures)); sys.stdout.flush()
     n_exp = float(len(exposures))
 
     filenames = [datapath + 'DECam_00' + str(_) + '.fits.fz' for _ in exposures]
@@ -295,7 +296,7 @@ def CoaddExposures(exposures, outnumber, datapath='/nfs/lsst2/photocalData/data/
     total_DARKTIME = primaryHeader['DARKTIME']
 
     # convert all arrays to floats for summing and dividing purposes
-    if verbose: print 'loading first file & converting dtype'
+    if verbose: print('loading first file & converting dtype')
     for hdu in range(1, N_HDUS+1):
         out_file[hdu].data = out_file[hdu].data.astype(np.float32)
     
@@ -307,13 +308,13 @@ def CoaddExposures(exposures, outnumber, datapath='/nfs/lsst2/photocalData/data/
         total_DARKTIME += this_file[0].header['DARKTIME']
 
         for hdu in range(1, N_HDUS+1):
-            if verbose: print 'adding hdu %s for file %s of %s'%(hdu,i+2,n_exp)
+            if verbose: print('adding hdu %s for file %s of %s'%(hdu,i+2,n_exp))
             out_file[hdu].data += this_file[hdu].data
     
     # Normalise
     if normalise:
         for hdu in range(1, N_HDUS+1):
-            if verbose: print 'Normalising hdu %s'%hdu
+            if verbose: print('Normalising hdu %s'%hdu)
             out_file[hdu].data /= n_exp
 
     # Update headers
@@ -330,17 +331,17 @@ def CoaddExposures(exposures, outnumber, datapath='/nfs/lsst2/photocalData/data/
     primaryHeader['EXPREQ']   = total_EXPREQ / n_exp #equivalent EXPREQ time, depending on noralisation
     primaryHeader['DARKTIME'] = total_DARKTIME / n_exp #equivalent DARKTIME time, depending on noralisation
 
-    if verbose: print 'Headers updated, writing to disk...'; sys.stdout.flush()
+    if verbose: print('Headers updated, writing to disk...'); sys.stdout.flush()
     out_file.flush()
     out_file.close()
-    if verbose: print 'Fished coaddition of %s, written to %s'%(exposures, outfilename)
+    if verbose: print('Fished coaddition of %s, written to %s'%(exposures, outfilename))
 
 def GetExpNumsFromDir(path):
     import pyfits as pf
     import os,sys
     
     filenames = os.listdir(path)
-    print 'Found %s files in %s\nOpening...'%(len(filenames), path); sys.stdout.flush()
+    print('Found %s files in %s\nOpening...'%(len(filenames), path)); sys.stdout.flush()
 
     expNums = []
     for filename in filenames:
@@ -350,7 +351,7 @@ def GetExpNumsFromDir(path):
 
     expNums.sort()
     caret_sep = str(expNums).replace(', ','^').replace('[','').replace(']','')
-    print caret_sep
+    print(caret_sep)
     return expNums, caret_sep
 
 def GetExpNumsPerFilterDictFromDir(path):
@@ -359,10 +360,10 @@ def GetExpNumsPerFilterDictFromDir(path):
     
     ret = {}
     filenames = os.listdir(path)
-    print 'Found %s files in %s\nOpening...'%(len(filenames), path); sys.stdout.flush()
+    print('Found %s files in %s\nOpening...'%(len(filenames), path)); sys.stdout.flush()
 
     for i, filename in enumerate(filenames):
-        if i%100==0: print 'Processed %s of %s files...'%(i, len(filenames)); sys.stdout.flush()
+        if i%100==0: print('Processed %s of %s files...'%(i, len(filenames))); sys.stdout.flush()
         this_file = pf.open(os.path.join(path,filename))
         expNum = this_file[0].header['EXPNUM']
         filt = this_file[0].header['FILTER']
@@ -376,14 +377,14 @@ def GetExpNumsPerFilterDictFromDir(path):
     
     for filt, expNums in ret.iteritems():
         caret_sep = str(sorted(expNums)).replace(', ','^').replace('[','').replace(']','')
-        print filt +': '+ caret_sep
+        print(filt +': '+ caret_sep)
     return ret
 
 def PrintListCaretSeparated(input_list, sort=True):
     if sort: input_list.sort()
     # I should reallly learn how to use regex :/
     caret_sep = str(input_list).replace(', ','^').replace('[','').replace(']','').replace('\'','')
-    print caret_sep
+    print(caret_sep)
     return caret_sep
 
                 
@@ -402,7 +403,7 @@ def GetRerunAndRepoNames(path):
         repo_name = parts[0].split('/')[-2]
         return repo_path, repo_name, rerun
     except:
-        print 'Failed to parse repo path \nIt likely did not conform to\n/some/path/to/repo_name/rerun/renum_name'
+        print('Failed to parse repo path \nIt likely did not conform to\n/some/path/to/repo_name/rerun/renum_name')
         return '', '', ''
     
 def indexOfMax(data):
