@@ -6,6 +6,7 @@ import numpy as np
 from lsst.afw.image import makeImageFromArray
 from time import sleep
 from matplotlib.pyplot import ylim
+import pylab as plt
 
 import shutil
 import os
@@ -126,6 +127,11 @@ def SafeCopyDir(src_dir, dest_dir, prepend_date=True, skip_eko_files=True):
         else:
             shutil.copy(source_filename,dest_filename)
 
+def ShowExp(exp, percentile=0.5):
+    data = exp.getMaskedImage().getImage().getArray()
+    plt.figure(figsize=(10,10))
+    plt.imshow(data, cmap='gray', vmin=np.percentile(data, percentile), vmax=np.percentile(data, 100-percentile), origin='bl')
+    plt.show()
 
 def BoxcarAverage1DArray(data, length):
     return np.convolve(data, np.ones((length,))/length,mode='valid')
