@@ -21,7 +21,7 @@ import pyfits as pf
 import sys
 import glob
 import functions as fn
-fn = reload(fn)
+# fn = reload(fn)
 
 
 
@@ -977,7 +977,7 @@ def MakeToFSpectrum(input_path, save_path, xmin=0, xmax=255, ymin=0, ymax=255, t
     
 def CentroidTimepixCluster(data, save_path = None, fit_function = None):
     import numpy as np
-    from ROOT import *
+    # from ROOT import *
     from ROOT import TH2F, TCanvas, TBrowser, TF2
     import ROOT
     gROOT.SetBatch(1) #don't show drawing on the screen along the way    
