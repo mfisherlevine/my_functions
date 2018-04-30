@@ -23,9 +23,22 @@ import glob
 import functions as fn
 # fn = reload(fn)
 
-
-
 intrinsic_offset = -75
+
+
+def GetMdSetFromVisitList(butler, visits, mdKey):
+    """Return the unique values of a given registry key for a list of visits."""
+    mdSet = []
+    failed = 0
+    for vis in visits:
+        try:
+            md = butler.queryMetadata('raw', [mdKey], dataId={'visit': vis})
+            mdSet.append(md[0])
+        except:
+            failed += 1
+    if failed:
+        print("Failed to find expTimes for %s of %s"%(failed, len(visits)))
+    return set(mdSet)
 
 # def TimepixToExposure(filename):
 #     from lsst.afw.image import makeImageFromArray
