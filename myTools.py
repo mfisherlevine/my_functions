@@ -1,4 +1,19 @@
 import numpy as np
+import lsst.afw.display as afwDisplay
+import lsst.afw.display.ds9 as ds9
+import lsst.afw.image as afwImage
+
+
+def argMax2d(array):
+    """Get the index of the max value of an array.
+
+    Actually for n dimensional, but easier to recall method if misnamed."""
+    return np.unravel_index(np.argmax(array, axis=None), array.shape)
+
+
+def countDetectedPixels(maskedImage):
+    detectedBit = maskedImage.mask.getPlaneBitMask("DETECTED")
+    return len(np.where(np.bitwise_and(maskedImage.mask.array, detectedBit))[0])
 
 
 def boxcarAverage1DArray(data, boxcarLength):
@@ -19,3 +34,11 @@ def boxcarAverage2DArray(array, boxcarSize):
             av = np.average(array[x:x+boxcarSize, y:y+boxcarSize])
             ret[x, y] = av
     return ret
+
+
+def turnOffAllMasks(exceptFor=None):
+    mpDict = afwImage.Mask().getMaskPlaneDict()
+    for plane in mpDict.keys():
+        if plane in exceptFor:
+            continue
+        ds9.setMaskPlaneColor(plane, afwDisplay.IGNORE)
