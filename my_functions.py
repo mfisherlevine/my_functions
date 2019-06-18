@@ -17,7 +17,7 @@ import pylab as plt
 import shutil
 import os
 import filecmp
-import pyfits as pf
+# import pyfits as pf
 import sys
 import glob
 import functions as fn
@@ -146,11 +146,14 @@ def SafeCopyDir(src_dir, dest_dir, prepend_date=True, skip_eko_files=True):
         else:
             shutil.copy(source_filename,dest_filename)
 
-def ShowExp(exp, percentile=0.5):
+def ShowExp(exp, percentile=0.5, saveAs=None, dontShow=False):
     data = exp.getMaskedImage().getImage().getArray()
     plt.figure(figsize=(10,10))
     plt.imshow(data, cmap='gray', vmin=np.percentile(data, percentile), vmax=np.percentile(data, 100-percentile), origin='bl')
-    plt.show()
+    if not dontShow:
+        plt.show()
+    if saveAs:
+        plt.savefig(saveAs)
 
 def BoxcarAverage1DArray(data, length):
     return np.convolve(data, np.ones((length,))/length,mode='valid')
