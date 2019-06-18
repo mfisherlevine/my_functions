@@ -11,9 +11,13 @@ def argMax2d(array):
     return np.unravel_index(np.argmax(array, axis=None), array.shape)
 
 
+def countPixels(maskedImage, maskPlane):
+    bit = maskedImage.mask.getPlaneBitMask(maskPlane)
+    return len(np.where(np.bitwise_and(maskedImage.mask.array, bit))[0])
+
+
 def countDetectedPixels(maskedImage):
-    detectedBit = maskedImage.mask.getPlaneBitMask("DETECTED")
-    return len(np.where(np.bitwise_and(maskedImage.mask.array, detectedBit))[0])
+    return countPixels(maskedImage, "DETECTED")
 
 
 def boxcarAverage1DArray(data, boxcarLength):
@@ -28,7 +32,7 @@ def boxcarAverage2DArray(array, boxcarSize):
     if boxcarSize == 1:
         return array
 
-    ret = np.zeros((xsize - (boxcarSize - 1), ysize - (boxcarSize - 1)), dtype = np.float32)
+    ret = np.zeros((xsize - (boxcarSize - 1), ysize - (boxcarSize - 1)), dtype=np.float32)
     for x in range(xsize - boxcarSize + 1):
         for y in range(ysize - boxcarSize + 1):
             av = np.average(array[x:x+boxcarSize, y:y+boxcarSize])
@@ -36,9 +40,37 @@ def boxcarAverage2DArray(array, boxcarSize):
     return ret
 
 
-def turnOffAllMasks(exceptFor=None):
+def isExposureTrimmed(exp):
+    det = exp.getDetector()
+    if exp.getDimensions() == det.getBBox().getDimensions():
+        return True
+    return False
+
+
+def displayArray(arrayData, frame=0):
+    tempIm = afwImage.ImageF(arrayData)
+    afwDisplay.Display(frame=frame).mtv(tempIm)
+
+
+def disp_turnOffAllMasks(exceptFor=None):
     mpDict = afwImage.Mask().getMaskPlaneDict()
     for plane in mpDict.keys():
         if plane in exceptFor:
             continue
         ds9.setMaskPlaneColor(plane, afwDisplay.IGNORE)
+
+# def disp_turnOffAllMasks(exceptFor=None):
+#     maskPlanes = afwImage.Mask().getMaskPlaneDict().keys()
+#     ignorePlanes = [p for p in maskPlanes if p not in exceptFor]
+#     for plane in ignorePlanes:
+#         ds9.setMaskPlaneColor(plane, afwDisplay.IGNORE)
+
+
+# def disp_setMyMaskColors():
+# dispI.setMaskPlaneColor("CROSSTALK", afwDisplay.ORANGE)
+# dispI.setMaskPlaneColor("CROSSTALK", "ignore")
+
+
+# Useful one-liners ###############
+
+# afwDisplay.setDefaultMaskTransparency(85)
