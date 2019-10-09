@@ -30,16 +30,21 @@ def scrapeKeys(fileList, keys, noWarn=False):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("files", type=str, help="List of files to scrape")
+    parser.add_argument("files", type=str, help=("List of files to scrape. Enclose any glob "
+                                                 "patterns in quotes so they are passed unexpanded"))
     parser.add_argument("-k", metavar='keys', dest='keys', nargs='+', type=str,
                         help="Keys to return")
-    parser.add_argument("--noWarn", action='store_true', help="Supress warnings for keys not in header?",
+    parser.add_argument("--noWarn", action='store_true', help="Suppress warnings for keys not in header?",
                         default=False, dest='noWarn')
 
     args = parser.parse_args()
     files = glob.glob(args.files)
     keys = args.keys
     noWarn = args.noWarn
+
+    if not keys:
+        print('No keys requested for scraping! Specify with -k KEY1 KEY2 etc', file=sys.stderr)
+        sys.exit(1)
 
     if not files:
         print('Found no files matching: ' + args.files, file=sys.stderr)
