@@ -4,12 +4,12 @@ from astropy.io import fits
 import filecmp
 import sys
 
+# redirect logger to stdout so that logger messages appear in notebooks too
 logging.basicConfig(
     level=logging.INFO,
     handlers=[logging.StreamHandler(sys.stdout)]
 )
 logger = logging.getLogger("headerFunctions")
-# logger.setLevel(logging.INFO)
 
 
 def buildHashAndHeaderDicts(fileList, dataSize=100, dataHdu=1):
@@ -74,31 +74,27 @@ def keyValuesSetFromFiles(fileList, keys, joinKeys, noWarn=False, printResults=T
         Useful when looking for the actual set, rather than taking the product
         of all the individual values, as some combinations may never happen.
     """
+    print(f"Scraping headers from {len(fileList)} files...")
+
+    hashDict, headerDict = buildHashAndHeaderDicts(fileList)
 
     if keys:  # necessary so that -j works on its own
-        values = {k: set() for k in keys}
+        kValues = {k: set() for k in keys}
     else:
         keys = []
-        values = None
+        kValues = None
 
     if joinKeys:
         joinedValues = set()
 
-    print(f"Scraping headers from {len(fileList)} files...")
-
-    for filenum, filename in enumerate(fileList):
-        if len(fileList) > 1000 and filenum%1000 == 0:
-            print(f"Processed {filenum} of {len(fileList)} files...")
-
-        with fits.open(filename) as f:
-            primaryHDU = f[0]
-            header = primaryHDU.header
-            for key in keys:
-                if key in header:
-                    values[key].add(header[key])
-                else:
-                    if not noWarn:
-                        logger.warning(f"{key} not found in header of {filename}")
+    for filename in headerDict.keys():
+        header = headerDict[filename]
+        for key in keys:
+            if key in header:
+                kValues[key].add(header[key])
+            else:
+                if not noWarn:
+                    logger.warning(f"{key} not found in header of {filename}")
 
             if joinKeys:
                 jVals = None
@@ -108,19 +104,23 @@ def keyValuesSetFromFiles(fileList, keys, joinKeys, noWarn=False, printResults=T
                     if not noWarn:
                         logger.warning(f"One or more of the requested joinKeys not found in {filename}")
                 if jVals:
+                    # substitute <BLANK_VALUE> when there is an undefined card
+                    # because str(v) will give the address for each blank value
+                    # too, meaning each blank card looks like a different value
                     joinedValues.add("+".join([str(v) if not isinstance(v, astropy.io.fits.card.Undefined)
                                               else "<BLANK_VALUE>" for v in jVals]))
+
     if printResults:
-        if values is not None:
-            for key in values.keys():
+        if kValues is not None:
+            for key in kValues.keys():
                 print(f"Values found for header key {key}:")
-                print(f"{values[key]}\n")
+                print(f"{kValues[key]}\n")
 
         if joinKeys:
             print(f"Values found when joining {joinKeys}:")
             print(f"{joinedValues}\n")
 
     if joinKeys:
-        return values, joinedValues
+        return kValues, joinedValues
 
-    return values
+    return kValues
