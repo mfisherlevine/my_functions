@@ -59,6 +59,10 @@ def disp_turnOffAllMasks(exceptFor=None):
             continue
         ds9.setMaskPlaneColor(plane, afwDisplay.IGNORE)
 
+
+def invertDictionary(inputDict):
+    return dict((v, k) for (k, v) in inputDict.items())
+
 # def disp_turnOffAllMasks(exceptFor=None):
 #     maskPlanes = afwImage.Mask().getMaskPlaneDict().keys()
 #     ignorePlanes = [p for p in maskPlanes if p not in exceptFor]
@@ -73,4 +77,5 @@ def disp_turnOffAllMasks(exceptFor=None):
 
 # Useful one-liners ###############
 
-# afwDisplay.setDefaultMaskTransparency(85)
+def setMaskTransparency():
+    afwDisplay.setDefaultMaskTransparency(85)

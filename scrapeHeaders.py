@@ -15,12 +15,14 @@ def scrapeKeys(fileList, keys, joinKeys, noWarn=False):
         values = None
 
     if joinKeys:
-        joinedKey = "+".join(joinKeys)
         joinedValues = set()
 
     print(f"Scraping headers from {len(fileList)} files...")
 
-    for filename in fileList:
+    for filenum, filename in enumerate(fileList):
+        if len(fileList) > 1000 and filenum%1000 == 0:
+            print(f"Processed {filenum} of {len(fileList)} files...")
+
         with fits.open(filename) as f:
             primaryHDU = f[0]
             header = primaryHDU.header
