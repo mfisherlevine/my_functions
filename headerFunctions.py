@@ -124,3 +124,53 @@ def keyValuesSetFromFiles(fileList, keys, joinKeys, noWarn=False, printResults=T
         return kValues, joinedValues
 
     return kValues
+
+
+def compareHeaders(filename1, filename2):
+    assert isinstance(filename1, str)
+    assert isinstance(filename2, str)
+
+    hashDict1, headerDict1 = buildHashAndHeaderDicts([filename1])
+    hashDict2, headerDict2 = buildHashAndHeaderDicts([filename2])
+
+    if list(hashDict1.keys())[0] != list(hashDict2.keys())[0]:
+        print("Pixel data was not the same - did you really mean to compare these files?")
+        print(f"{filename1}\n{filename2}")
+        cont = input("Press y to continue, anything else to quit:")
+        if cont.lower()[0] != 'y':
+            exit()
+
+    h1 = headerDict1[filename1]
+    h2 = headerDict2[filename2]
+    h1Keys = list(h1.keys())
+    h2Keys = list(h2.keys())
+
+    commonKeys = set(h1Keys)
+    commonKeys = commonKeys.intersection(h2Keys)
+
+    keysInh1NotInh2 = [_ for _ in h1Keys if _ not in h2Keys]
+    keysInh2NotInh1 = [_ for _ in h2Keys if _ not in h1Keys]
+
+    print(f"Keys in {filename1} not in {filename2}:\n {keysInh1NotInh2}\n")
+    print(f"Keys in {filename2} not in {filename1}:\n {keysInh2NotInh1}\n")
+    print(f"Keys in common: {commonKeys}\n")
+
+    # put in lists so we can output neatly rather than interleaving
+    identical = []
+    differing = []
+    for key in commonKeys:
+        if h1[key] == h2[key]:
+            identical.append(key)
+        else:
+            differing.append(key)
+
+    assert len(identical)+len(differing) == len(commonKeys)
+
+    if len(identical) == len(commonKeys):
+        print("All keys in common have identical values :)")
+    else:
+        print("Of the common keys, the following had identical values:")
+        print(f"{identical}\n")
+        print("Common keys with differing values were:")
+        for key in differing:
+            print(f"{key}: {h1[key]} vs {h2[key]}")
