@@ -127,6 +127,28 @@ def keyValuesSetFromFiles(fileList, keys, joinKeys, noWarn=False, printResults=T
 
 
 def compareHeaders(filename1, filename2):
+    """Compare the headers of two files in detail.
+
+    First, the two files are confirmed to have the same pixel data to ensure
+    the files should be being compared (by hashing the first 100x100 pixels
+    in HDU 1).
+
+    It then prints out:
+        the keys that appear in A and not B
+        the keys that appear in B but not A
+        the keys that in common, and of those in common:
+            which are the same,
+            which differ,
+            and where different, what the differing values are
+
+    Parameters
+    ----------
+    filename1 : str
+        Full path to the first of the files to compare
+
+    filename2 : str
+        Full path to the second of the files to compare
+    """
     assert isinstance(filename1, str)
     assert isinstance(filename2, str)
 
