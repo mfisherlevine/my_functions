@@ -56,6 +56,15 @@ def buildHashAndHeaderDicts(fileList, dataSize=100, dataHdu=1):
     return dataDict, headersDict
 
 
+def sorted(inlist, replacementValue="<BLANK VALUE>"):
+    """Redefinition of sorted() to deal with blank values and str/int mixes"""
+    from builtins import sorted as _sorted
+    output = [str(x) if not isinstance(x, astropy.io.fits.card.Undefined)
+              else replacementValue for x in inlist]
+    output = _sorted(output)
+    return output
+
+
 def keyValuesSetFromFiles(fileList, keys, joinKeys, noWarn=False, printResults=True):
     """For a list of FITS files, get the set of values for the given keys.
 
@@ -114,11 +123,11 @@ def keyValuesSetFromFiles(fileList, keys, joinKeys, noWarn=False, printResults=T
         if kValues is not None:
             for key in kValues.keys():
                 print(f"Values found for header key {key}:")
-                print(f"{kValues[key]}\n")
+                print(f"{sorted(kValues[key])}\n")
 
         if joinKeys:
             print(f"Values found when joining {joinKeys}:")
-            print(f"{joinedValues}\n")
+            print(f"{sorted(joinedValues)}\n")
 
     if joinKeys:
         return kValues, joinedValues
