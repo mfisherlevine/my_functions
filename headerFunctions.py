@@ -162,6 +162,10 @@ def compareHeaders(filename1, filename2):
         if cont.lower()[0] != 'y':
             exit()
 
+    # you might think you don't want to always call sorted() on the key sets
+    # BUT otherwise they seem to be returned in random order each time you run
+    # and that can be crazy-making
+
     h1 = headerDict1[filename1]
     h2 = headerDict2[filename2]
     h1Keys = list(h1.keys())
@@ -170,12 +174,12 @@ def compareHeaders(filename1, filename2):
     commonKeys = set(h1Keys)
     commonKeys = commonKeys.intersection(h2Keys)
 
-    keysInh1NotInh2 = [_ for _ in h1Keys if _ not in h2Keys]
-    keysInh2NotInh1 = [_ for _ in h2Keys if _ not in h1Keys]
+    keysInh1NotInh2 = sorted([_ for _ in h1Keys if _ not in h2Keys])
+    keysInh2NotInh1 = sorted([_ for _ in h2Keys if _ not in h1Keys])
 
-    print(f"Keys in {filename1} not in {filename2}:\n {keysInh1NotInh2}\n")
-    print(f"Keys in {filename2} not in {filename1}:\n {keysInh2NotInh1}\n")
-    print(f"Keys in common: {commonKeys}\n")
+    print(f"Keys in {filename1} not in {filename2}:\n{keysInh1NotInh2}\n")
+    print(f"Keys in {filename2} not in {filename1}:\n{keysInh2NotInh1}\n")
+    print(f"Keys in common:\n{sorted(commonKeys)}\n")
 
     # put in lists so we can output neatly rather than interleaving
     identical = []
@@ -192,7 +196,10 @@ def compareHeaders(filename1, filename2):
         print("All keys in common have identical values :)")
     else:
         print("Of the common keys, the following had identical values:")
-        print(f"{identical}\n")
+        print(f"{sorted(identical)}\n")
         print("Common keys with differing values were:")
-        for key in differing:
-            print(f"{key}: {h1[key]} vs {h2[key]}")
+        for key in sorted(differing):
+            d = "<blank card>".ljust(25)
+            v1 = str(h1[key]).ljust(25) if not isinstance(h1[key], astropy.io.fits.card.Undefined) else d
+            v2 = str(h2[key]).ljust(25) if not isinstance(h2[key], astropy.io.fits.card.Undefined) else d
+            print(f"{key.ljust(8)}: {v1} vs {v2}")
