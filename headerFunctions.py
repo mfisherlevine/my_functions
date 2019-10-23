@@ -74,17 +74,21 @@ def buildHashAndHeaderDicts(fileList, dataSize=100, dataHdu=1, libraryLocation=N
         if len(fileList) > 1000 and filenum%1000 == 0:
             logger.info(f"Processed {filenum} of {len(fileList)} files...")
         with fits.open(filename) as f:
-            headersDict[filename] = f[0].header
-            h = hash(f[dataHdu].data[s, s].tostring())
-            if h in dataDict.keys():
-                collision = dataDict[h]
-                logger.warn(f"Duplicate file (or hash collision!) for files {filename} and {collision}!")
-                if filecmp.cmp(filename, collision):
-                    logger.warn("Filecmp shows files are identical")
+            try:
+                headersDict[filename] = f[0].header
+                h = hash(f[dataHdu].data[s, s].tostring())
+                if h in dataDict.keys():
+                    collision = dataDict[h]
+                    logger.warn(f"Duplicate file (or hash collision!) for files {filename} and {collision}!")
+                    if filecmp.cmp(filename, collision):
+                        logger.warn("Filecmp shows files are identical")
+                    else:
+                        logger.warn("Filecmp shows files differ - "
+                                    "likely just zeros for data (or a genuine hash collision!)")
                 else:
-                    logger.warn("Filecmp shows files differ - a genuine hash collision?!")
-            else:
-                dataDict[h] = filename
+                    dataDict[h] = filename
+            except Exception:
+                logger.warn(f"Failed to load {filename} - file is likely corrupted.")
 
     # we have always added to this, so save it back over the original
     if libraryLocation and len(fileList) > 0:
