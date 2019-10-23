@@ -14,13 +14,34 @@ logging.basicConfig(
 logger = logging.getLogger("headerFunctions")
 
 
-def _loadFromLibrary(libraryFilename):
+def loadHeaderDictsFromLibrary(libraryFilename):
+    """Load the header and hash dicts from a pickle file.
+
+    Parameters
+    ----------
+    libraryFilename : `str`
+        Path of the library file to load from
+
+    Returns
+    -------
+    headersDict : `dict`
+        A dict, keyed by filename, with the values being the full primary
+    header, exactly as if it were built by buildHashAndHeaderDicts().
+
+    dataDict : `dict`
+        A dict, keyed by the data hash, with the values being strings of the
+    filename, exactly as if it were built by buildHashAndHeaderDicts().
+    """
     try:
         with open(libraryFilename, "rb") as pickleFile:
             headersDict, dataDict = pickle.load(pickleFile)
 
-        assert len(headersDict) == len(dataDict)
-        print(f"Loaded {len(headersDict)} values from pickle files")
+        if len(headersDict) != len(dataDict):
+            print("Loaded differing numbers of entries for the header and data dicts.")
+            print(f"{len(headersDict)} vs {len(dataDict)}")
+            print("There were likely hash collisions in generating these library files.")
+        else:
+            print(f"Loaded {len(headersDict)} values from pickle files")
     except Exception as e:
         if not os.path.exists(libraryFilename):
             print(f"{libraryFilename} not found. If building the header dicts for the first time this"
@@ -29,12 +50,17 @@ def _loadFromLibrary(libraryFilename):
             print(f"Something more sinister went wrong loading headers from {libraryFilename}:\n{e}")
         return {}, {}
 
-    return headersDict, dataDict
+    return headersDict, dataDict  # TODO: reorder these, or the builder function, so that they agree
 
 
 def _saveToLibrary(libraryFilename, headersDict, dataDict):
-    with open(libraryFilename, "wb") as dumpFile:
-        pickle.dump((headersDict, dataDict), dumpFile)
+    try:
+        with open(libraryFilename, "wb") as dumpFile:
+            pickle.dump((headersDict, dataDict), dumpFile, pickle.HIGHEST_PROTOCOL)
+    except Exception:
+        print("Failed to write pickle file! Here's a debugger so you don't lose all your work:")
+        import ipdb as pdb
+        pdb.set_trace()
 
 
 def buildHashAndHeaderDicts(fileList, dataSize=100, dataHdu=1, libraryLocation=None):
@@ -64,7 +90,7 @@ def buildHashAndHeaderDicts(fileList, dataSize=100, dataHdu=1, libraryLocation=N
     dataDict = {}
 
     if libraryLocation:
-        headersDict, dataDict = _loadFromLibrary(libraryLocation)
+        headersDict, dataDict = loadHeaderDictsFromLibrary(libraryLocation)
 
     # don't load files we already know about from the library
     fileList = [f for f in fileList if f not in headersDict.keys()]
