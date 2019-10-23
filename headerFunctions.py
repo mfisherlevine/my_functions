@@ -3,6 +3,8 @@ import astropy
 from astropy.io import fits
 import filecmp
 import sys
+import os
+import pickle
 
 # redirect logger to stdout so that logger messages appear in notebooks too
 logging.basicConfig(
@@ -12,7 +14,30 @@ logging.basicConfig(
 logger = logging.getLogger("headerFunctions")
 
 
-def buildHashAndHeaderDicts(fileList, dataSize=100, dataHdu=1):
+def _loadFromLibrary(libraryFilename):
+    try:
+        with open(libraryFilename, "rb") as pickleFile:
+            headersDict, dataDict = pickle.load(pickleFile)
+
+        assert len(headersDict) == len(dataDict)
+        print(f"Loaded {len(headersDict)} values from pickle files")
+    except Exception as e:
+        if not os.path.exists(libraryFilename):
+            print(f"{libraryFilename} not found. If building the header dicts for the first time this"
+                  " is to be expected.\nOtherwise you've misspecified the path to you library!")
+        else:
+            print(f"Something more sinister went wrong loading headers from {libraryFilename}:\n{e}")
+        return {}, {}
+
+    return headersDict, dataDict
+
+
+def _saveToLibrary(libraryFilename, headersDict, dataDict):
+    with open(libraryFilename, "wb") as dumpFile:
+        pickle.dump((headersDict, dataDict), dumpFile)
+
+
+def buildHashAndHeaderDicts(fileList, dataSize=100, dataHdu=1, libraryLocation=None):
     """For a list of files, build dicts of hashed data and headers.
 
     Parameters
@@ -35,9 +60,16 @@ def buildHashAndHeaderDicts(fileList, dataSize=100, dataHdu=1):
     header.
 
     """
-    s = slice(0, dataSize)
-    dataDict = {}
     headersDict = {}
+    dataDict = {}
+
+    if libraryLocation:
+        headersDict, dataDict = _loadFromLibrary(libraryLocation)
+
+    # don't load files we already know about from the library
+    fileList = [f for f in fileList if f not in headersDict.keys()]
+
+    s = slice(0, dataSize)
     for filenum, filename in enumerate(fileList):
         if len(fileList) > 1000 and filenum%1000 == 0:
             logger.info(f"Processed {filenum} of {len(fileList)} files...")
@@ -53,6 +85,11 @@ def buildHashAndHeaderDicts(fileList, dataSize=100, dataHdu=1):
                     logger.warn("Filecmp shows files differ - a genuine hash collision?!")
             else:
                 dataDict[h] = filename
+
+    # we have always added to this, so save it back over the original
+    if libraryLocation and len(fileList) > 0:
+        _saveToLibrary(libraryLocation, headersDict, dataDict)
+
     return dataDict, headersDict
 
 
@@ -65,7 +102,7 @@ def sorted(inlist, replacementValue="<BLANK VALUE>"):
     return output
 
 
-def keyValuesSetFromFiles(fileList, keys, joinKeys, noWarn=False, printResults=True):
+def keyValuesSetFromFiles(fileList, keys, joinKeys, noWarn=False, printResults=True, libraryLocation=None):
     """For a list of FITS files, get the set of values for the given keys.
 
     Parameters
@@ -85,7 +122,7 @@ def keyValuesSetFromFiles(fileList, keys, joinKeys, noWarn=False, printResults=T
     """
     print(f"Scraping headers from {len(fileList)} files...")
 
-    hashDict, headerDict = buildHashAndHeaderDicts(fileList)
+    hashDict, headerDict = buildHashAndHeaderDicts(fileList, libraryLocation=libraryLocation)
 
     if keys:  # necessary so that -j works on its own
         kValues = {k: set() for k in keys}
