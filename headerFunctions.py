@@ -172,19 +172,19 @@ def keyValuesSetFromFiles(fileList, keys, joinKeys, noWarn=False, printResults=T
                 if not noWarn:
                     logger.warning(f"{key} not found in header of {filename}")
 
-            if joinKeys:
-                jVals = None
-                try:
-                    jVals = [header[k] for k in joinKeys]
-                except Exception:
-                    if not noWarn:
-                        logger.warning(f"One or more of the requested joinKeys not found in {filename}")
-                if jVals:
-                    # substitute <BLANK_VALUE> when there is an undefined card
-                    # because str(v) will give the address for each blank value
-                    # too, meaning each blank card looks like a different value
-                    joinedValues.add("+".join([str(v) if not isinstance(v, astropy.io.fits.card.Undefined)
-                                              else "<BLANK_VALUE>" for v in jVals]))
+        if joinKeys:
+            jVals = None
+            try:
+                jVals = [header[k] for k in joinKeys]
+            except Exception:
+                if not noWarn:
+                    logger.warning(f"One or more of the requested joinKeys not found in {filename}")
+            if jVals:
+                # substitute <BLANK_VALUE> when there is an undefined card
+                # because str(v) will give the address for each blank value
+                # too, meaning each blank card looks like a different value
+                joinedValues.add("+".join([str(v) if not isinstance(v, astropy.io.fits.card.Undefined)
+                                          else "<BLANK_VALUE>" for v in jVals]))
 
     if printResults:
         if kValues is not None:
