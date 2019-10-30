@@ -5,6 +5,8 @@ import filecmp
 import sys
 import os
 import pickle
+import hashlib
+import numpy as np
 
 # redirect logger to stdout so that logger messages appear in notebooks too
 logging.basicConfig(
@@ -29,8 +31,8 @@ def loadHeaderDictsFromLibrary(libraryFilename):
     header, exactly as if it were built by buildHashAndHeaderDicts().
 
     dataDict : `dict`
-        A dict, keyed by the data hash, with the values being strings of the
-    filename, exactly as if it were built by buildHashAndHeaderDicts().
+        A dict, keyed by filename, with the values being hashes of the data
+    sections, exactly as if it were built by buildHashAndHeaderDicts().
     """
     try:
         with open(libraryFilename, "rb") as pickleFile:
@@ -39,7 +41,7 @@ def loadHeaderDictsFromLibrary(libraryFilename):
         if len(headersDict) != len(dataDict):
             print("Loaded differing numbers of entries for the header and data dicts.")
             print(f"{len(headersDict)} vs {len(dataDict)}")
-            print("There were likely hash collisions in generating these library files.")
+            print("Something has gone badly wrong - your library seems corrupted!")
         else:
             print(f"Loaded {len(headersDict)} values from pickle files")
     except Exception as e:
@@ -50,7 +52,7 @@ def loadHeaderDictsFromLibrary(libraryFilename):
             print(f"Something more sinister went wrong loading headers from {libraryFilename}:\n{e}")
         return {}, {}
 
-    return headersDict, dataDict  # TODO: reorder these, or the builder function, so that they agree
+    return headersDict, dataDict
 
 
 def _saveToLibrary(libraryFilename, headersDict, dataDict):
@@ -63,27 +65,54 @@ def _saveToLibrary(libraryFilename, headersDict, dataDict):
         pdb.set_trace()
 
 
-def buildHashAndHeaderDicts(fileList, dataSize=100, dataHdu=1, libraryLocation=None):
+def _findKeyForValue(dictionary, value, warnOnCollision=True, returnCollisions=False):
+    listOfKeys = [k for (k, v) in dictionary.items() if v == value]
+    if warnOnCollision and len(listOfKeys) != 1:
+        logger.warn("Found multiple keys for value! Returning only first.")
+    if returnCollisions:
+        return listOfKeys
+    return listOfKeys[0]
+
+
+def _hashFile(fileToHash, dataHdu, sliceToUse):
+    """Put in place so that if hashing multiple HDUs is desired when one
+    is filled with zeros it will be easy to add"""
+    data = fileToHash[dataHdu].data[sliceToUse, sliceToUse].tostring()
+    h = _hashData(data)
+    return h
+
+
+def _hashData(data):
+    h = hashlib.sha256(data).hexdigest()  # hex because we want it readable in the dict
+    return h
+
+
+ZERO_HASH = _hashData(np.zeros((100, 100), dtype=np.int32))
+
+
+def buildHashAndHeaderDicts(fileList, dataHdu=1, libraryLocation=None):
     """For a list of files, build dicts of hashed data and headers.
+
+    Data is hashed using a currently-hard-coded 100x100 region of the pixels
+    i.e. file[dataHdu].data[0:100, 0:100]
 
     Parameters
     ----------
     fileList : `list` of `str`
         The fully-specified paths of the files to scrape
 
-    dataSize : int
-        The side-length of the first n x n section of the data HDU to hash,
-        i.e. dataSize = 100 hashes the data[0:100, 0:100]
+    dataHdu : int
+        The HDU to use for the pixel data to hash.
 
     Returns
     -------
-    dataDict : `dict`
-        A dict, keyed by the data hash, with the values being strings of the
-    filename
-
     headersDict : `dict`
         A dict, keyed by filename, with the values being the full primary
     header.
+
+    dataDict : `dict`
+        A dict, keyed by filename, with the values being hashes of the file's
+    data section, as defined by the dataSize and dataHdu.
 
     """
     headersDict = {}
@@ -93,34 +122,41 @@ def buildHashAndHeaderDicts(fileList, dataSize=100, dataHdu=1, libraryLocation=N
         headersDict, dataDict = loadHeaderDictsFromLibrary(libraryLocation)
 
     # don't load files we already know about from the library
-    fileList = [f for f in fileList if f not in headersDict.keys()]
+    filesToLoad = [f for f in fileList if f not in headersDict.keys()]
 
-    s = slice(0, dataSize)
-    for filenum, filename in enumerate(fileList):
-        if len(fileList) > 1000 and filenum%1000 == 0:
-            logger.info(f"Processed {filenum} of {len(fileList)} files...")
+    s = slice(0, 100)
+    for filenum, filename in enumerate(filesToLoad):
+        if len(filesToLoad) > 1000 and filenum%1000 == 0:
+            if libraryLocation:
+                logger.info(f"Processed {filenum} of {len(filesToLoad)} files not loaded from library...")
+            else:
+                logger.info(f"Processed {filenum} of {len(fileList)} files...")
         with fits.open(filename) as f:
             try:
                 headersDict[filename] = f[0].header
-                h = hash(f[dataHdu].data[s, s].tostring())
-                if h in dataDict.keys():
-                    collision = dataDict[h]
+                h = _hashFile(f, dataHdu, s)
+                if h in dataDict.values():
+                    collision = _findKeyForValue(dataDict, h, warnOnCollision=False)
                     logger.warn(f"Duplicate file (or hash collision!) for files {filename} and {collision}!")
                     if filecmp.cmp(filename, collision):
                         logger.warn("Filecmp shows files are identical")
                     else:
                         logger.warn("Filecmp shows files differ - "
                                     "likely just zeros for data (or a genuine hash collision!)")
-                else:
-                    dataDict[h] = filename
+
+                dataDict[filename] = h
             except Exception:
                 logger.warn(f"Failed to load {filename} - file is likely corrupted.")
 
     # we have always added to this, so save it back over the original
-    if libraryLocation and len(fileList) > 0:
+    if libraryLocation and len(filesToLoad) > 0:
         _saveToLibrary(libraryLocation, headersDict, dataDict)
 
-    return dataDict, headersDict
+    # have to pare these down, as library loaded could be a superset
+    headersDict = {k: headersDict[k] for k in fileList if k in headersDict.keys()}
+    dataDict = {k: dataDict[k] for k in fileList if k in dataDict.keys()}
+
+    return headersDict, dataDict
 
 
 def sorted(inlist, replacementValue="<BLANK VALUE>"):
@@ -152,7 +188,7 @@ def keyValuesSetFromFiles(fileList, keys, joinKeys, noWarn=False, printResults=T
     """
     print(f"Scraping headers from {len(fileList)} files...")
 
-    hashDict, headerDict = buildHashAndHeaderDicts(fileList, libraryLocation=libraryLocation)
+    headerDict, hashDict = buildHashAndHeaderDicts(fileList, libraryLocation=libraryLocation)
 
     if keys:  # necessary so that -j works on its own
         kValues = {k: set() for k in keys}
@@ -174,27 +210,33 @@ def keyValuesSetFromFiles(fileList, keys, joinKeys, noWarn=False, printResults=T
 
         if joinKeys:
             jVals = None
-            try:
-                jVals = [header[k] for k in joinKeys]
-            except Exception:
-                if not noWarn:
-                    logger.warning(f"One or more of the requested joinKeys not found in {filename}")
-            if jVals:
-                # substitute <BLANK_VALUE> when there is an undefined card
-                # because str(v) will give the address for each blank value
-                # too, meaning each blank card looks like a different value
-                joinedValues.add("+".join([str(v) if not isinstance(v, astropy.io.fits.card.Undefined)
-                                          else "<BLANK_VALUE>" for v in jVals]))
+            # Note that CCS doesn't leave values blank, it misses the whole
+            # card out for things like FILTER2 when not being used
+            jVals = [header[k] if k in header else "<missing card>" for k in joinKeys]
+
+            # However, we do ALSO get blank cards to, so:
+            # substitute <BLANK_VALUE> when there is an undefined card
+            # because str(v) will give the address for each blank value
+            # too, meaning each blank card looks like a different value
+            joinedValues.add("+".join([str(v) if not isinstance(v, astropy.io.fits.card.Undefined)
+                                      else "<BLANK_VALUE>" for v in jVals]))
 
     if printResults:
+        # Do this first because it's messy
+        zeroFiles = _findKeyForValue(hashDict, ZERO_HASH, warnOnCollision=False, returnCollisions=True)
+        if zeroFiles:
+            print("\nFiles with zeros for data:")
+        for filename in zeroFiles:
+            print(f"{filename}")
+
         if kValues is not None:
             for key in kValues.keys():
-                print(f"Values found for header key {key}:")
-                print(f"{sorted(kValues[key])}\n")
+                print(f"\nValues found for header key {key}:")
+                print(f"{sorted(kValues[key])}")
 
         if joinKeys:
-            print(f"Values found when joining {joinKeys}:")
-            print(f"{sorted(joinedValues)}\n")
+            print(f"\nValues found when joining {joinKeys}:")
+            print(f"{sorted(joinedValues)}")
 
     if joinKeys:
         return kValues, joinedValues
@@ -228,8 +270,8 @@ def compareHeaders(filename1, filename2):
     assert isinstance(filename1, str)
     assert isinstance(filename2, str)
 
-    hashDict1, headerDict1 = buildHashAndHeaderDicts([filename1])
-    hashDict2, headerDict2 = buildHashAndHeaderDicts([filename2])
+    headerDict1, hashDict1 = buildHashAndHeaderDicts([filename1])
+    headerDict2, hashDict2 = buildHashAndHeaderDicts([filename2])
 
     if list(hashDict1.keys())[0] != list(hashDict2.keys())[0]:
         print("Pixel data was not the same - did you really mean to compare these files?")
