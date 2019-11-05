@@ -273,7 +273,7 @@ def compareHeaders(filename1, filename2):
     headerDict1, hashDict1 = buildHashAndHeaderDicts([filename1])
     headerDict2, hashDict2 = buildHashAndHeaderDicts([filename2])
 
-    if list(hashDict1.keys())[0] != list(hashDict2.keys())[0]:
+    if hashDict1[filename1] != hashDict2[filename2]:
         print("Pixel data was not the same - did you really mean to compare these files?")
         print(f"{filename1}\n{filename2}")
         cont = input("Press y to continue, anything else to quit:")
