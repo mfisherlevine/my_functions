@@ -90,7 +90,7 @@ def _hashData(data):
 ZERO_HASH = _hashData(np.zeros((100, 100), dtype=np.int32))
 
 
-def buildHashAndHeaderDicts(fileList, dataHdu=1, libraryLocation=None):
+def buildHashAndHeaderDicts(fileList, dataHdu='Segment00', libraryLocation=None):
     """For a list of files, build dicts of hashed data and headers.
 
     Data is hashed using a currently-hard-coded 100x100 region of the pixels
@@ -101,7 +101,7 @@ def buildHashAndHeaderDicts(fileList, dataHdu=1, libraryLocation=None):
     fileList : `list` of `str`
         The fully-specified paths of the files to scrape
 
-    dataHdu : int
+    dataHdu : `str` or `int`
         The HDU to use for the pixel data to hash.
 
     Returns
@@ -321,3 +321,23 @@ def compareHeaders(filename1, filename2):
             v1 = str(h1[key]).ljust(25) if not isinstance(h1[key], astropy.io.fits.card.Undefined) else d
             v2 = str(h2[key]).ljust(25) if not isinstance(h2[key], astropy.io.fits.card.Undefined) else d
             print(f"{key.ljust(8)}: {v1} vs {v2}")
+
+    # Finally, check the extension naming has the same ordering.
+    # We have to touch the files again, which is pretty lame
+    # but not doing so would require the header builder to know about
+    # file pairings or return extra info, and that's not ideal either,
+    # and also not worth the hassle to optimise as this is only
+    # ever for a single file, not bulk file processing
+    numbering1, numbering2 = [], []
+    with fits.open(filename1) as f1, fits.open(filename2) as f2:
+        for hduF1, hduF2 in zip(f1[1:], f2[1:]):  # skip the PDU
+            if 'EXTNAME' in hduF1.header and 'EXTNAME' in hduF2.header:
+                numbering1.append(hduF1.header['EXTNAME'])
+                numbering2.append(hduF2.header['EXTNAME'])
+
+    if numbering1 != numbering2:
+        print('\nSection numbering differs between files!')
+        for s1, s2 in zip(numbering1, numbering2):
+            print(f"{s1.ljust(12)} vs {s2.ljust(12)}")
+    if len(numbering1) != len(numbering2):
+        print("The length of those lists was also DIFFERENT! Presumably a non-image HDU was interleaved.")
