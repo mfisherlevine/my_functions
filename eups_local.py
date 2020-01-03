@@ -4,9 +4,10 @@ import sys
 
 GITMAP = {
     "nothing to commit, working tree clean": "✅",
-    "Untracked files:": "🤷‍♂️",
-    "Changes not staged for commit:": "❌",
+    "Untracked files:": "🤷‍♂️ untracked files",
+    "Changes not staged for commit:": "❌ unstaged work",
     "Parsing failed": "⛔️",
+    "diverged": "🔀 diverged",
 }
 
 
@@ -38,17 +39,80 @@ def print_results(packages, paths, branches, statuses, sorting=''):
         print(f"{package:15}\t{path:30}\t{branch:18}\t{status}")
 
 
-def parseGitOutput(gitOutput):
-    branch = gitOutput.split('\n')[0].split()[2]
-    l3 = gitOutput.split('\n')[2]
+def fetchAndCheckMaster(path):
+    """
+    Examples:
+
+    On branch master
+    Your branch is up-to-date with 'origin/master'.
+    nothing to commit, working tree clean
+
+
+    On branch master
+    Your branch is behind 'origin/master' by 4 commits, and can be fast-forwarded.
+      (use "git pull" to update your local branch)
+    nothing to commit, working tree clean
+    """
+    fetchCmd = f"git --git-dir={path}/.git --work-tree={path} fetch"
+    _ = subprocess.check_output(fetchCmd.split(), universal_newlines=True)
+    statusCmd = f"git --git-dir={path}/.git --work-tree={path} status"
+    newGitOutput = subprocess.check_output(statusCmd.split(), universal_newlines=True)
+
+    line2 = newGitOutput.split('\n')[1]
+
+    if line2 == "Your branch is up-to-date with 'origin/master'.":
+        return "✅"
+    if line2.startswith("Your branch is behind 'origin/master' by"):
+        line2 = line2.replace("Your branch is behind 'origin/master' by ", "")
+        n = line2.split()[0]
+        status = f"✅ ⬇️  {n} commits"
+        return status
+
+    return "??? - master parse fail"
+
+
+def parseGitOutput(gitOutput, path):
+    #  Should maybe switch to using --porcelain for the initial status stuff
+
+    branch = gitOutput.split('\n')[0].split()[2]  # always the third word of first line?
+    line3 = gitOutput.split('\n')[2]
+
+    if branch == 'master':
+        status = fetchAndCheckMaster(path)
+        return branch, status
+
+    if line3.endswith('respectively.'):
+        return branch, GITMAP['diverged']
+
     try:
-        status = GITMAP[l3]
+        status = GITMAP[line3]
     except KeyError:
-        print(f"Failed to map the following git status for {branch}:")
+        print(f"Failed to map the following git status for branch {branch}:")
         print('---------')
         show(gitOutput)
         print('---------')
         status = "⛔️"
+    return branch, status
+
+
+def getLocalPackagesFromEupsOutput(eupsOutput):
+    lines = [line for line in eupsOutput.split('\n') if "LOCAL" in line]
+    packages, paths = [], []
+
+    for line in lines:
+        ret = line.split()
+        assert len(ret) == 3
+        packages.append(ret[0])
+        paths.append(ret[1][6:])
+
+    return packages, paths
+
+
+def getBranchAndStatus(package, path):
+    cmd = f"git --git-dir={path}/.git --work-tree={path} status"
+    gitOutput = subprocess.check_output(cmd.split(), universal_newlines=True)
+    branch, status = parseGitOutput(gitOutput, path)
+
     return branch, status
 
 
@@ -61,6 +125,7 @@ if __name__ == "__main__":
     # worst argparser ever, but - and -- are both OK, and command just has to
     # begin with the right letter. It was quicker than remembering how to use
     # argparse properly - don't judge me.
+
     args = sys.argv
     sorting = ''
     if len(args) > 1:
@@ -75,19 +140,11 @@ if __name__ == "__main__":
     cmd = 'eups list -s'
     eupsOutput = subprocess.check_output(cmd.split(), universal_newlines=True)
 
-    lines = [line for line in eupsOutput.split('\n') if "LOCAL" in line]
-    packages, paths = [], []
+    packages, paths = getLocalPackagesFromEupsOutput(eupsOutput)
     branches, statuses = [], []
-    for line in lines:
-        ret = line.split()
-        assert len(ret) == 3
-        packages.append(ret[0])
-        paths.append(ret[1][6:])
 
     for package, path in zip(packages, paths):
-        cmd = f"git --git-dir={path}/.git --work-tree={path} status"
-        gitOutput = subprocess.check_output(cmd.split(), universal_newlines=True)
-        branch, status = parseGitOutput(gitOutput)
+        branch, status = getBranchAndStatus(package, path)
         branches.append(branch)
         statuses.append(status)
 
