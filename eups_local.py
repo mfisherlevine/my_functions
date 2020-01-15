@@ -35,8 +35,13 @@ def print_results(packages, paths, branches, statuses, sorting=''):
     elif sorting == 's':
         inds = statuses.argsort()[::-1]  # bad stuff first
 
+    paddings = []
+    paddings.append(max([len(x) for x in packages]) + 2)
+    paddings.append(max([len(x) for x in paths]) + 2)
+    paddings.append(max([len(x) for x in branches]) + 3)
+
     for package, path, branch, status in zip(packages[inds], paths[inds], branches[inds], statuses[inds]):
-        print(f"{package:15}\t{path:30}\t{branch:18}\t{status}")
+        print(f"{package:{paddings[0]}} {path:{paddings[1]}} {branch:{paddings[2]}} {status}")
 
 
 def fetchAndCheckMaster(path):
