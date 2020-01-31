@@ -8,6 +8,7 @@ GITMAP = {
     "Changes not staged for commit:": "❌ unstaged work",
     "Parsing failed": "⛔️",
     "diverged": "🔀 diverged",
+    # detached done differently due to detach point in value
 }
 
 
@@ -81,6 +82,19 @@ def parseGitOutput(gitOutput, path):
 
     branch = gitOutput.split('\n')[0].split()[2]  # always the third word of first line?
     line3 = gitOutput.split('\n')[2]
+
+    if branch == "at":
+        line1 = gitOutput.split('\n')[0]
+        line2 = gitOutput.split('\n')[1]
+
+        if line1.startswith('HEAD detached'):  # check it is really detached
+            branch = "n/a - detached"
+            status = f'🔪 at {line1.split()[3]}'
+            if line2 == "nothing to commit, working tree clean":
+                status += " ✅"
+            else:
+                status += " ❌"
+            return branch, status
 
     if branch == 'master':
         status = fetchAndCheckMaster(path)
