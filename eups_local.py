@@ -160,8 +160,12 @@ if __name__ == "__main__":
     eupsOutput = subprocess.check_output(cmd.split(), universal_newlines=True)
 
     packages, paths = getLocalPackagesFromEupsOutput(eupsOutput)
-    branches, statuses = [], []
+    if len(packages) == 0:
+        print("No local packages were found to be setup. If you think this is a lie try")
+        print("eups list -s | grep LOCAL")
+        exit()
 
+    branches, statuses = [], []
     for package, path in zip(packages, paths):
         branch, status = getBranchAndStatus(package, path)
         branches.append(branch)
