@@ -67,7 +67,11 @@ def fetchAndCheckMaster(path):
     line2 = newGitOutput.split('\n')[1]
 
     if line2 == "Your branch is up-to-date with 'origin/master'.":
-        return "✅"
+        line3 = newGitOutput.split('\n')[2]
+        if line3 in GITMAP.keys():
+            return GITMAP[line3]
+        else:
+            return GITMAP["Parsing failed"]
     if line2.startswith("Your branch is behind 'origin/master' by"):
         line2 = line2.replace("Your branch is behind 'origin/master' by ", "")
         n = line2.split()[0]
