@@ -66,8 +66,8 @@ def fetchAndCheckMaster(path):
 
     line2 = newGitOutput.split('\n')[1]
 
-    if line2 == "Your branch is up-to-date with 'origin/master'.":
-        line3 = newGitOutput.split('\n')[2]
+    if line2 == "Your branch is up to date with 'origin/master'.":
+        line3 = newGitOutput.split('\n')[3]
         if line3 in GITMAP.keys():
             return GITMAP[line3]
         else:
@@ -85,7 +85,6 @@ def parseGitOutput(gitOutput, path):
     #  Should maybe switch to using --porcelain for the initial status stuff
 
     branch = gitOutput.split('\n')[0].split()[2]  # always the third word of first line?
-    line3 = gitOutput.split('\n')[2]
 
     if branch == "at":
         line1 = gitOutput.split('\n')[0]
@@ -104,10 +103,11 @@ def parseGitOutput(gitOutput, path):
         status = fetchAndCheckMaster(path)
         return branch, status
 
-    if line3.endswith('respectively.'):
-        return branch, GITMAP['diverged']
-
     try:
+        line3 = gitOutput.split('\n')[3]
+        if line3.endswith('respectively.'):
+            return branch, GITMAP['diverged']
+
         status = GITMAP[line3]
     except KeyError:
         print(f"Failed to map the following git status for branch {branch}:")
