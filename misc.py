@@ -11,7 +11,9 @@ def imports():
             yield name, val
 
 
-noglobal = lambda fn: types.FunctionType(fn.__code__, dict(imports()))
+# noglobal = lambda fn: types.FunctionType(fn.__code__, dict(imports()))
+
+noglobal = lambda fn: types.FunctionType(fn.__code__, dict(imports()), argdefs=fn.__defaults__)
 
 # use as:
 # a = 1
