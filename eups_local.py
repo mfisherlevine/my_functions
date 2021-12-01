@@ -45,17 +45,17 @@ def print_results(packages, paths, branches, statuses, sorting=''):
         print(f"{package:{paddings[0]}} {path:{paddings[1]}} {branch:{paddings[2]}} {status}")
 
 
-def fetchAndCheckMaster(path):
+def fetchAndCheckMain(path):
     """
     Examples:
 
-    On branch master
-    Your branch is up-to-date with 'origin/master'.
+    On branch main
+    Your branch is up-to-date with 'origin/main'.
     nothing to commit, working tree clean
 
 
-    On branch master
-    Your branch is behind 'origin/master' by 4 commits, and can be fast-forwarded.
+    On branch main
+    Your branch is behind 'origin/main' by 4 commits, and can be fast-forwarded.
       (use "git pull" to update your local branch)
     nothing to commit, working tree clean
     """
@@ -66,19 +66,19 @@ def fetchAndCheckMaster(path):
 
     line2 = newGitOutput.split('\n')[1]
 
-    if line2 == "Your branch is up to date with 'origin/master'.":
+    if line2 == "Your branch is up to date with 'origin/main'.":
         line3 = newGitOutput.split('\n')[3]
         if line3 in GITMAP.keys():
             return GITMAP[line3]
         else:
             return GITMAP["Parsing failed"]
-    if line2.startswith("Your branch is behind 'origin/master' by"):
-        line2 = line2.replace("Your branch is behind 'origin/master' by ", "")
+    if line2.startswith("Your branch is behind 'origin/main' by"):
+        line2 = line2.replace("Your branch is behind 'origin/main' by ", "")
         n = line2.split()[0]
         status = f"✅ ⬇️  {n} commits"
         return status
 
-    return "??? - master parse fail"
+    return "??? - main parse fail"
 
 
 def parseGitOutput(gitOutput, path):
@@ -99,8 +99,8 @@ def parseGitOutput(gitOutput, path):
                 status += " ❌"
             return branch, status
 
-    if branch == 'master':
-        status = fetchAndCheckMaster(path)
+    if branch == 'main':
+        status = fetchAndCheckMain(path)
         return branch, status
 
     try:
@@ -109,7 +109,7 @@ def parseGitOutput(gitOutput, path):
             return branch, GITMAP['diverged']
 
         status = GITMAP[line3]
-    except KeyError:
+    except (KeyError, IndexError):
         print(f"Failed to map the following git status for branch {branch}:")
         print('---------')
         show(gitOutput)
@@ -125,6 +125,8 @@ def getLocalPackagesFromEupsOutput(eupsOutput):
     for line in lines:
         ret = line.split()
         assert len(ret) == 3
+        if ret[0] == 'eups':  # rubin env now has eups as LOCAL for cloned scipipe
+            continue
         packages.append(ret[0])
         paths.append(ret[1][6:])
 

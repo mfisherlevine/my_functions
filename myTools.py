@@ -4,6 +4,7 @@ import threading
 import subprocess
 import tempfile
 import shutil
+import itertools
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -15,11 +16,68 @@ import lsst.afw.image as afwImage
 import lsst.geom as geom
 import lsst.daf.persistence.butlerExceptions as butlerExcept
 import lsst.meas.algorithms as measAlg
+import lsst.rapid.analysis.butlerUtils as bu
 
 # import lsst.log
 # from contextlib import redirect_stdout, redirect_stderr
 
 CALIB_VALUES = ['FlatField position', 'Park position', 'azel_target']
+
+
+def getLatissOnSkyDataIds_gen2(butler, skipTypes=['BIAS', 'DARK', 'FLAT'], checkObject=True, startDate=None):
+    """Return a dayObs, seqNum dict for each on-sky observation"""
+    def isOnSky(dataId):
+        imageType = dataId.pop('imageType')  # want it gone for later
+        obj = dataId.pop('object')  # want it gone for later
+        if obj == 'NOTSET' and checkObject:
+            return False
+        if imageType not in skipTypes:
+            return True
+        return False
+
+    days = butler.queryMetadata('raw', 'dayObs')
+    days = [d for d in days if d.startswith('202')]  # went on sky in Jan 2020
+    if startDate:
+        days = [d for d in days if d >= startDate]
+    
+    allDataIds = []
+    for day in days:
+        ret = butler.queryMetadata('raw', ['seqNum', 'imageType', 'object'], dayObs=day)
+        allDataIds.extend([{'dayObs': day, 'seqNum': s, 'imageType': i, 'object': o} for (s, i, o) in ret])
+
+    return [d for d in filter(isOnSky, allDataIds)]
+
+
+def getLatissOnSkyDataIds(butler, skipTypes=['bias', 'dark', 'flat'], checkObject=True, expanded=False,
+                          startDate=None, endDate=None):
+    def isOnSky(expRecord):
+        imageType = expRecord.observation_type
+        obj = expRecord.target_name
+        if checkObject and obj == 'NOTSET':
+            return False
+        if imageType not in skipTypes:
+            return True
+        return False
+    
+    recordSets = []
+    days = bu.getDaysOnSky(butler)
+    if startDate:
+        days = [d for d in days if d >= startDate]
+    if endDate:
+        days = [d for d in days if d <= startDate]
+        
+    days = sorted(set(days))
+
+    where = "exposure.day_obs=day_obs"
+    for day in days:
+        records = butler.registry.queryDimensionRecords("exposure", where=where, bind={'day_obs': day})
+        recordSets.append(records)
+
+    dataIds = [r.dataId for r in filter(isOnSky, itertools.chain(*recordSets))]
+    if expanded:
+        return [butler.registry.expandDataId(dataId) for dataId in dataIds]
+    else:
+        return dataIds
 
 
 def argMax2d(array):
