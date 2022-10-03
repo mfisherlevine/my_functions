@@ -163,9 +163,12 @@ if __name__ == "__main__":
 
     args = sys.argv
     sorting = ''
+    printTicketDetails = False
     if len(args) > 1:
         sorting = args[1]
         sorting = sorting.replace('-', '')
+        if 'v' in sorting:
+            printTicketDetails = True
         sorting = sorting[0]
         if sorting == '?':
             dumpGITMAP()
@@ -192,22 +195,19 @@ if __name__ == "__main__":
         branches.append(branch)
         statuses.append(status)
 
-        try:
-            if 'DM-' in branch:
-                branch = re.sub('^.*/', '', branch)
-                result = check_url(branch)
-                ticketDetails.append(result[0])  # [0] is the description
-                print(f'Appended {result[0]} for branch {branch}')
-            else:
-                ticketDetails.append('')  # Do not use None here!
-        except Exception:
-            ticketDetails.append('Failed to contact Jira')
+        if printTicketDetails:
+            try:
+                if 'DM-' in branch:
+                    branch = re.sub('^.*/', '', branch)
+                    result = check_url(branch)
+                    ticketDetails.append(result[0])  # [0] is the description
+                else:
+                    ticketDetails.append('')
+            except Exception:
+                ticketDetails.append('Failed to contact Jira')
+        else:
+            ticketDetails.append('')
 
-    print(len(packages))
-    print(len(paths))
-    print(len(branches))
-    print(len(statuses))
-    print(len(ticketDetails))
     assert len(packages) == len(paths) == len(branches) == len(statuses) == len(ticketDetails)
     print_results(packages=packages,
                   paths=paths,
