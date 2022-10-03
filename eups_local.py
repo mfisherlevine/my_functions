@@ -1,6 +1,8 @@
 import subprocess
 import numpy as np
 import sys
+import re
+from jira_it import check_url
 
 GITMAP = {
     "nothing to commit, working tree clean": "✅",
@@ -17,7 +19,7 @@ def show(text):
         print(line)
 
 
-def print_results(packages, paths, branches, statuses, sorting=''):
+def print_results(*, packages, paths, branches, statuses, ticketDetails, sorting=''):
     """Print the results
 
     Default sorting is alphabetical by package name (also 'p')
@@ -28,6 +30,7 @@ def print_results(packages, paths, branches, statuses, sorting=''):
     paths = np.array(paths)
     branches = np.array(branches)
     statuses = np.array(statuses)
+    ticketDetails = np.array(ticketDetails)
 
     if sorting == '' or sorting == 'p':
         inds = packages.argsort()
@@ -35,14 +38,21 @@ def print_results(packages, paths, branches, statuses, sorting=''):
         inds = branches.argsort()
     elif sorting == 's':
         inds = statuses.argsort()[::-1]  # bad stuff first
+    else:
+        inds = range(len(packages))
 
     paddings = []
     paddings.append(max([len(x) for x in packages]) + 2)
     paddings.append(max([len(x) for x in paths]) + 2)
     paddings.append(max([len(x) for x in branches]) + 3)
-
-    for package, path, branch, status in zip(packages[inds], paths[inds], branches[inds], statuses[inds]):
+    for package, path, branch, status, details in zip(packages[inds],
+                                                      paths[inds],
+                                                      branches[inds],
+                                                      statuses[inds],
+                                                      ticketDetails[inds]):
         print(f"{package:{paddings[0]}} {path:{paddings[1]}} {branch:{paddings[2]}} {status}")
+        if details != '':
+            print(f'\t {details}')
 
 
 def fetchAndCheckMain(path):
@@ -55,7 +65,7 @@ def fetchAndCheckMain(path):
 
 
     On branch main
-    Your branch is behind 'origin/main' by 4 commits, and can be fast-forwarded.
+    Your branch is behind 'origin/main' by 4 commits, and can be fast-forwarded
       (use "git pull" to update your local branch)
     nothing to commit, working tree clean
     """
@@ -171,11 +181,37 @@ if __name__ == "__main__":
         print("eups list -s | grep LOCAL")
         exit()
 
-    branches, statuses = [], []
+    branches, statuses, ticketDetails = [], [], []
     for package, path in zip(packages, paths):
+        if '/sdf/group/rubin/g/shared' in path:
+            branches.append('main')
+            statuses.append('--shared stack--')
+            ticketDetails.append(None)
+            continue
         branch, status = getBranchAndStatus(package, path)
         branches.append(branch)
         statuses.append(status)
 
-    assert len(packages) == len(paths) == len(branches) == len(statuses)
-    print_results(packages, paths, branches, statuses, sorting)
+        try:
+            if 'DM-' in branch:
+                branch = re.sub('^.*/', '', branch)
+                result = check_url(branch)
+                ticketDetails.append(result[0])  # [0] is the description
+                print(f'Appended {result[0]} for branch {branch}')
+            else:
+                ticketDetails.append('')  # Do not use None here!
+        except Exception:
+            ticketDetails.append('Failed to contact Jira')
+
+    print(len(packages))
+    print(len(paths))
+    print(len(branches))
+    print(len(statuses))
+    print(len(ticketDetails))
+    assert len(packages) == len(paths) == len(branches) == len(statuses) == len(ticketDetails)
+    print_results(packages=packages,
+                  paths=paths,
+                  branches=branches,
+                  statuses=statuses,
+                  ticketDetails=ticketDetails,
+                  sorting=sorting)
