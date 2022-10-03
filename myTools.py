@@ -409,5 +409,10 @@ def summarizeVisit(butler, *, exp=None, extendedSummary=False, **kwargs):
         print(f"  →        {(md['ROTPA']*math.pi/180):.6f} rad")
 
 
-# with open(os.devnull, 'w') as f, redirect_stdout(f), redirect_stderr(f):
-    # catch all the ISR chat
+def mPrint(obj):
+    try:
+        import black
+    except ImportError:
+        print('Failed to import black, printing normally, sorry...')
+        print(obj)
+    print(black.format_str(repr(obj), mode=black.Mode()))
