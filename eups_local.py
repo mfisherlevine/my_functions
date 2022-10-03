@@ -1,3 +1,4 @@
+import argparse
 import subprocess
 import numpy as np
 import sys
@@ -52,7 +53,8 @@ def print_results(*, packages, paths, branches, statuses, ticketDetails, sorting
                                                       ticketDetails[inds]):
         print(f"{package:{paddings[0]}} {path:{paddings[1]}} {branch:{paddings[2]}} {status}")
         if details != '':
-            print(f'\t {details}')
+            pad = np.sum(paddings) - len(branch) - 1
+            print(f"{' '*pad}{details}")
 
 
 def fetchAndCheckMain(path):
@@ -157,23 +159,22 @@ def dumpGITMAP():
 
 
 if __name__ == "__main__":
-    # worst argparser ever, but - and -- are both OK, and command just has to
-    # begin with the right letter. It was quicker than remembering how to use
-    # argparse properly - don't judge me.
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-v", "--verbosity", help="Print ticket titles", action="store_true")
+    parser.add_argument("-s", "--sorting", help="Print ticket titles",
+                        metavar='sorting', dest='sorting')
 
-    args = sys.argv
-    sorting = ''
-    printTicketDetails = False
-    if len(args) > 1:
-        sorting = args[1]
-        sorting = sorting.replace('-', '')
-        if 'v' in sorting:
-            printTicketDetails = True
-        sorting = sorting[0]
-        if sorting == '?':
-            dumpGITMAP()
-            exit()
-        assert sorting in ['p', 's', 't']
+    args = parser.parse_args()
+    printTicketDetails = args.verbosity
+
+    sorting = 'p'
+    if args.sorting:
+        sorting = args.sorting
+    if sorting == '?':
+        dumpGITMAP()
+        exit()
+    assert len(sorting) == 1
+    assert sorting in ['p', 's', 't'], 'Valid sorts are (p)ackage, (s)tatus, (t)icket.'
 
     cmd = 'eups list -s'
     eupsOutput = subprocess.check_output(cmd.split(), universal_newlines=True)
