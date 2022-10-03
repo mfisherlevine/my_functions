@@ -190,7 +190,7 @@ if __name__ == "__main__":
         if '/sdf/group/rubin/g/shared' in path:
             branches.append('main')
             statuses.append('--shared stack--')
-            ticketDetails.append(None)
+            ticketDetails.append('')
             continue
         branch, status = getBranchAndStatus(package, path)
         branches.append(branch)

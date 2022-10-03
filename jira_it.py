@@ -37,14 +37,13 @@ if __name__ == '__main__':
     parser.add_argument("-v", "--verbose", action='store_true', default=False)
     args = parser.parse_args()
 
-    urls = None
     if not args.urls:  # no ticket specified so find out the current dir's ticket
         path = os.getcwd()
         branchCommand = f"git --git-dir={path}/.git --work-tree={path} symbolic-ref --short HEAD"
         branchName = subprocess.check_output(branchCommand.split(), universal_newlines=True)
-        urls = [branchName.strip()]
+        args.urls = [branchName.strip()]
 
-    for u in urls:
+    for u in args.urls:
         if 'DM-' in u:
             u = re.sub('^.*/', '', u)
             ss, st, ass, rev, fullUrl = check_url(u)
