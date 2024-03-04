@@ -14,9 +14,8 @@ import lsst.afw.display as afwDisplay
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.image as afwImage
 import lsst.geom as geom
-import lsst.daf.persistence.butlerExceptions as butlerExcept
 import lsst.meas.algorithms as measAlg
-import lsst.rapid.analysis.butlerUtils as bu
+import lsst.summit.utils.butlerUtils as bu
 
 # import lsst.log
 # from contextlib import redirect_stdout, redirect_stderr
@@ -39,7 +38,7 @@ def getLatissOnSkyDataIds_gen2(butler, skipTypes=['BIAS', 'DARK', 'FLAT'], check
     days = [d for d in days if d.startswith('202')]  # went on sky in Jan 2020
     if startDate:
         days = [d for d in days if d >= startDate]
-    
+
     allDataIds = []
     for day in days:
         ret = butler.queryMetadata('raw', ['seqNum', 'imageType', 'object'], dayObs=day)
@@ -58,14 +57,14 @@ def getLatissOnSkyDataIds(butler, skipTypes=['bias', 'dark', 'flat'], checkObjec
         if imageType not in skipTypes:
             return True
         return False
-    
+
     recordSets = []
     days = bu.getDaysOnSky(butler)
     if startDate:
         days = [d for d in days if d >= startDate]
     if endDate:
         days = [d for d in days if d <= startDate]
-        
+
     days = sorted(set(days))
 
     where = "exposure.day_obs=day_obs"
@@ -333,7 +332,7 @@ def summarizeVisit(butler, *, exp=None, extendedSummary=False, **kwargs):
                         wcs = butler.get(datasetType + '_wcs', **kwargs)
                         typeUsed = datasetType
                         break
-                    except butlerExcept.NoResults:
+                    except Exception:
                         pass
                 if wcs is not None:
                     ra = geom.Angle(raRad)

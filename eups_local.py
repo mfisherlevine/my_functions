@@ -55,6 +55,7 @@ def print_results(*, packages, paths, branches, statuses, ticketDetails, sorting
         if details != '':
             pad = np.sum(paddings) - len(branch) - 1
             print(f"{' '*pad}{details}")
+            print()
 
 
 def fetchAndCheckMain(path):
