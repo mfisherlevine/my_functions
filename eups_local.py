@@ -1,9 +1,8 @@
 import argparse
 import subprocess
 import numpy as np
-import sys
 import re
-from jira_it import check_url
+from jira_it import get_jira_issue
 
 GITMAP = {
     "nothing to commit, working tree clean": "✅",
@@ -201,7 +200,7 @@ if __name__ == "__main__":
             try:
                 if 'DM-' in branch:
                     branch = re.sub('^.*/', '', branch)
-                    result = check_url(branch)
+                    result = get_jira_issue(branch)
                     ticketDetails.append(result[0])  # [0] is the description
                 else:
                     ticketDetails.append('')
